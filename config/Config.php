@@ -4,6 +4,8 @@ class Config {
 
     // Globals
     const BASE_PATH = __DIR__ . '/../';
+    const DEBUG = true;
+    const ALLOWED_ORIGINS = ['localhost'];
 
     // Databaseinformation
     const HOST = 'localhost';
