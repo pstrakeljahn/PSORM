@@ -1,56 +1,47 @@
 <?php
 
+use PS\Core\Api\Request;
 use PS\Core\Api\Response;
+use PS\Core\Api\Session;
 
-try{
-    $requestUri = $_SERVER['REQUEST_URI'];
-    $httpMethod = $_SERVER['REQUEST_METHOD'];
-    $urlParts = parse_url($requestUri);
-    $path = trim($urlParts['path'], '/');
-    
-    $segments = explode('/', $path);
-    
-    $apiIndex = array_search('api', $segments);
-
+try {
     require "../lib/core/init.php";
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
-    if(!is_null($origin) && !in_array($_SERVER['HTTP_ORIGIN'], Config::ALLOWED_ORIGINS)) {
-        throw new \Exception("Origin is not allowed");
-    }
+    $loggedIn = false;
+    $request = Request::getInstance();
+    $sessionInstance = Session::getInstance($request->segments[$request->apiIndex + 2] === Request::TYPE_LOGIN);
 
+    $loggedIn = $sessionInstance->getLoggedIn();
+
+    if (!$loggedIn && $request->segments[$request->apiIndex + 2] !== Request::TYPE_LOGIN) {
+        throw new \Exception('Not logged in');
+    }
     $error = null;
-    $data = null;
-    
-    if ($apiIndex !== false && count($segments) >= $apiIndex + 3) {
-        $version = $segments[$apiIndex + 1];
-    
-        switch ($segments[$apiIndex + 2]) {
-            case 'obj':
-                if (isset($segments[$apiIndex + 3])) {
-                    $objectName = $segments[$apiIndex + 3];
-    
-                    if (isset($segments[$apiIndex + 4])) {
-                        $objectID = $segments[$apiIndex + 4];
+    if (count($request->segments) >= $request->apiIndex + 3) {
+        switch ($request->segments[$request->apiIndex + 2]) {
+            case Request::TYPE_OBJ:
+                if (isset($request->segments[$request->apiIndex + 3])) {
+                    $objectName = $request->segments[$request->apiIndex + 3];
+
+                    if (isset($request->segments[$request->apiIndex + 4])) {
+                        $objectID = $request->segments[$request->apiIndex + 4];
                         $data = ["ID" => $objectID];
                     }
                 }
                 break;
-    
-            default:
-                echo "missing!";
+            case Request::TYPE_LOGIN:
+                $data = $sessionInstance->login($request);
                 break;
         }
         (new Response)->setError($error)->setData($data)->getResponse();
-}
-
-} catch(\Exception $e) {
+    }
+} catch (\Exception $e) {
     (new Response)
         ->setError($e->getMessage())
-        ->setStatus(Response::SERVER_ERROR)
-        ->setDebug([
+        ->setStatus($loggedIn ? Response::SERVER_ERROR : Response::UNAUTHORIZED)
+        ->setDebug($loggedIn ? [
             'file' => $e->getFile(),
             'line' => $e->getLine(),
             'trace' => $e->getTrace()
-        ])
+        ] : [])
         ->getResponse();
 }

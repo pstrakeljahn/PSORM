@@ -7,9 +7,10 @@ use Config;
 class Response
 {
     const STATUS_OK = 200;
+    const UNAUTHORIZED = 401;
     const SERVER_ERROR = 500;
 
-    const ARR_STATUSCODE = [self::STATUS_OK, self::SERVER_ERROR];
+    const ARR_STATUSCODE = [self::STATUS_OK, self::UNAUTHORIZED, self::SERVER_ERROR];
     const ALLOWED_METHODES = ["OPTIONS", "GET", "POST", "PUT", "DELETE"];
 
     private int $statusCode = self::STATUS_OK;
