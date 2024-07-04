@@ -5,7 +5,7 @@ namespace PS\Core\Database\Fields;
 class EnumField extends FieldBase
 {
     private $allowedValues;
-    private string $name;
+    readonly string $name;
 
     public function __construct($name)
     {

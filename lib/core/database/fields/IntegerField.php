@@ -7,7 +7,7 @@ class IntegerField extends FieldBase
     private int $length = 10;
     private bool $unsigned = false;
     private bool $isBigInt = false;
-    private string $name;
+    readonly string $name;
 
     public function __construct($name)
     {

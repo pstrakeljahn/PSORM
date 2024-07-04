@@ -6,17 +6,26 @@ use PS\Core\Database\Fields\IntegerField;
 
 abstract class Entity
 {
-    protected string $table;
+    readonly string $table;
     protected static string $primaryKey = 'ID';
     protected array $altPrimaryKeys = [];
     protected $fields = [];
     protected bool $disableID = false;
-    protected string $entityName;
+    readonly string $entityName;
 
-    public function __construct(string $entityName, array $fields)
+    abstract public function fieldDefinition(): array;
+    abstract protected function setEntitname(): string;
+    abstract protected function setTabelName(): string;
+
+    public function __construct()
     {
-        $this->entityName = ucfirst($entityName);
-        $this->fields = $fields;
+        $this->run();
+    }
+
+    public final function run(): void
+    {
+        $this->entityName = ucfirst($this->setEntitname());
+        $this->fields = $this->fieldDefinition();
     }
 
     public final function _getFields(): array

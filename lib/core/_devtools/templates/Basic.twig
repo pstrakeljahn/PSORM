@@ -1,0 +1,21 @@
+<?php
+
+class {{ className }} {
+{# newLine #}
+    {%- for field in fields %}
+    protected ${{ field }};
+{# newLine #}
+    {%- endfor %}
+
+    {%- for field in fields %}
+
+    public function get{{ field|capitalize }}() {
+        return $this->{{ field }};
+    }
+
+    public function set{{ field|capitalize }}(${{ field }}) {
+        $this->{{ field }} = ${{ field }};
+    }
+{# newLine #}
+    {%- endfor %}
+}

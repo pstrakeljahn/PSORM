@@ -1,7 +1,9 @@
 <?php
 
 include 'autoload.php';
+include 'autoloadEntity.php';
 
-if (file_exists('vendor/autoload.php')) {
-	require 'vendor/autoload.php';
+$composerAutoloaderPath = Config::BASE_PATH . "lib/core/vendor/autoload.php";
+if (file_exists($composerAutoloaderPath)) {
+	require $composerAutoloaderPath;
 }

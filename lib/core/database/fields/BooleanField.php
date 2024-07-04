@@ -5,7 +5,7 @@ namespace PS\Core\Database\Fields;
 class BooleanField extends FieldBase
 {
     private $default = 0;
-    private string $name;
+    readonly string $name;
 
     public function __construct($name)
     {

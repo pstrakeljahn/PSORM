@@ -5,7 +5,7 @@ namespace PS\Core\Database\Fields;
 class StringField extends FieldBase
 {
     private $length = 255;
-    private string $name;
+    readonly string $name;
 
     public function __construct($name)
     {
