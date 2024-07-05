@@ -1,21 +1,19 @@
 <?php
 
 class {{ className }} {
-{# newLine #}
     {%- for field in fields %}
-    protected ${{ field }};
-{# newLine #}
+    const {{ field|upper }} = '{{ field }}';
     {%- endfor %}
 
-    {%- for field in fields %}
+    const REQUIRED = [
+        {%- for required in requiredFields %}
+        '{{ required }}'{{ loop.last ? '' : ',' }}
+        {%- endfor %}
+    ];
 
-    public function get{{ field|capitalize }}() {
-        return $this->{{ field }};
-    }
-
-    public function set{{ field|capitalize }}(${{ field }}) {
-        $this->{{ field }} = ${{ field }};
-    }
-{# newLine #}
-    {%- endfor %}
+    const API_READABLE = [
+        {%- for readable in readableFields %}
+        '{{ readable }}'{{ loop.last ? '' : ',' }}
+        {%- endfor %}
+    ];
 }

@@ -2,8 +2,8 @@
 
 namespace PS\Core\Api\Authmethodes;
 
-use Config;
 use PS\Core\Api\Request;
+use Config;
 
 class BearerToken implements AuthMethodeInterface
 {
@@ -51,7 +51,7 @@ class BearerToken implements AuthMethodeInterface
     {
         $token = self::getBearerToken();
         if ($token === null) {
-            throw new \Exception("Cannot get JWT Token");
+            throw new \Exception('Cannot get JWT Token');
         }
         return self::validateToken($token);
     }
@@ -73,9 +73,9 @@ class BearerToken implements AuthMethodeInterface
         $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
         $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
 
-        $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, self::generateSecret(), true);
+        $signature = hash_hmac('sha256', $base64UrlHeader . '.' . $base64UrlPayload, self::generateSecret(), true);
         $base64UrlSignature = self::base64url_encode($signature);
-        $jwt = $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
+        $jwt = $base64UrlHeader . '.' . $base64UrlPayload . '.' . $base64UrlSignature;
         return $jwt;
     }
 
@@ -96,7 +96,7 @@ class BearerToken implements AuthMethodeInterface
         $base64UrlPayload = self::base64url_encode($decodedPayload);
 
         // Signature
-        $signature = hash_hmac('SHA256', $base6UrlHeader . "." . $base64UrlPayload, self::generateSecret(), true);
+        $signature = hash_hmac('SHA256', $base6UrlHeader . '.' . $base64UrlPayload, self::generateSecret(), true);
         $base64UrlSignature = self::base64url_encode($signature);
         $signatureValid = ($base64UrlSignature === $signatureProvided);
 

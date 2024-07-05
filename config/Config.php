@@ -4,7 +4,6 @@ use PS\Core\Api\Authmethodes\BearerToken;
 
 class Config
 {
-
     // Globals
     const BASE_PATH = __DIR__ . '/../';
     const DEBUG = true;

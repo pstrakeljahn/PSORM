@@ -5,7 +5,7 @@ use PS\Core\Api\Response;
 use PS\Core\Api\Session;
 
 try {
-    require "../lib/core/init.php";
+    require '../lib/core/init.php';
     $loggedIn = false;
     $request = Request::getInstance();
     $sessionInstance = Session::getInstance($request->segments[$request->apiIndex + 2] === Request::TYPE_LOGIN);
@@ -24,7 +24,7 @@ try {
 
                     if (isset($request->segments[$request->apiIndex + 4])) {
                         $objectID = $request->segments[$request->apiIndex + 4];
-                        $data = ["ID" => $objectID];
+                        $data = ['ID' => $objectID];
                     }
                 }
                 break;

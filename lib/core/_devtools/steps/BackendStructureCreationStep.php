@@ -2,8 +2,8 @@
 
 namespace PS\Core\_devtools\Steps;
 
-use Config;
 use PS\Core\_devtools\Abstracts\BuildStep;
+use Config;
 
 class BackendStructureCreationStep extends BuildStep
 {
@@ -20,15 +20,15 @@ class BackendStructureCreationStep extends BuildStep
     public function run(): bool
     {
         $structure = [
-            'build' => ['basicPeer', 'basic'],
-            'logs'  => null
+            'build' => ['peerBasic', 'basic'],
+            'logs' => null
         ];
-        
+
         $basePath = Config::BASE_PATH;
-        
+
         if (!self::createFolders($structure, $basePath)) {
             return false;
-        } 
+        }
         return true;
     }
 

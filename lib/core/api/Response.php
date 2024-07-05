@@ -9,9 +9,8 @@ class Response
     const STATUS_OK = 200;
     const UNAUTHORIZED = 401;
     const SERVER_ERROR = 500;
-
     const ARR_STATUSCODE = [self::STATUS_OK, self::UNAUTHORIZED, self::SERVER_ERROR];
-    const ALLOWED_METHODES = ["OPTIONS", "GET", "POST", "PUT", "DELETE"];
+    const ALLOWED_METHODES = ['OPTIONS', 'GET', 'POST', 'PUT', 'DELETE'];
 
     private int $statusCode = self::STATUS_OK;
     private array $data = [];
@@ -22,16 +21,16 @@ class Response
     {
         $this->setHeader();
         $arrResponse = [
-            "meta" => [
-                "method" => $_SERVER['REQUEST_METHOD'],
-                "status" => $this->statusCode,
+            'meta' => [
+                'method' => $_SERVER['REQUEST_METHOD'],
+                'status' => $this->statusCode,
             ],
-            "data" => $this->data,
-            "error" => $this->error,
+            'data' => $this->data,
+            'error' => $this->error,
         ];
 
         if (Config::DEBUG) {
-            $arrResponse = [...$arrResponse, "debug" => $this->debug];
+            $arrResponse = [...$arrResponse, 'debug' => $this->debug];
         }
 
         $jsonString = json_encode($arrResponse, Config::DEBUG ? JSON_PRETTY_PRINT : 0);
@@ -43,7 +42,7 @@ class Response
     public final function setStatus(int $statusCode): self
     {
         if (!in_array($statusCode, self::ARR_STATUSCODE)) {
-            throw new \Exception("Status Code not allowed");
+            throw new \Exception('Status Code not allowed');
         }
         http_response_code($statusCode);
         $this->statusCode = $statusCode;
@@ -86,6 +85,6 @@ class Response
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
         header('Content-Type: application/json');
         header('Access-Control-Allow-Origin: ' . $origin);
-        header('Access-Control-Allow-Methods: ' . implode(", ", self::ALLOWED_METHODES));
+        header('Access-Control-Allow-Methods: ' . implode(', ', self::ALLOWED_METHODES));
     }
 }

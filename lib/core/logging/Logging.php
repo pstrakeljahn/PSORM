@@ -23,7 +23,7 @@ class Logging
 
     /**
      * Add an entry to the log
-     * 
+     *
      * @param string $type Specify the log. Use LOG_TYPE_$type constant
      * @param string $message Log message. Datetime will be added
      * @param bool $extended Save an entry in the extended log only
@@ -48,7 +48,7 @@ class Logging
 
     /**
      * Has to be executed to create log-files if they not exist
-     * 
+     *
      * @return void
      */
     public static function generateFiles(): void
@@ -81,7 +81,7 @@ class Logging
 
     /**
      * Get logging instance
-     * 
+     *
      * @return Logging
      */
     public static function getInstance(): self

@@ -11,12 +11,12 @@ class IntegerField extends FieldBase
 
     public function __construct($name)
     {
-        $this->name = $name;    
+        $this->name = $name;
     }
 
     public final function getMySQLDefinition()
     {
-        return "`{$this->name}` " . ($this->isBigInt ? "BIGINT({$this->length})" : "INT({$this->length})" ). ($this->unsigned ? ' UNSIGNED' : '');
+        return "`{$this->name}` " . ($this->isBigInt ? "BIGINT({$this->length})" : "INT({$this->length})") . ($this->unsigned ? ' UNSIGNED' : '');
     }
 
     public final function setLength(int $length): self

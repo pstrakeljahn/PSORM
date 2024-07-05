@@ -7,7 +7,6 @@ use ReflectionClass;
 
 class Session
 {
-
     private $authInstance;
 
     public function __construct($login)
@@ -37,8 +36,8 @@ class Session
 
     public final function login(Request $request): ?array
     {
-        if($request->httpMethod !== 'POST') {
-            throw new \Exception("Use POST method to login");
+        if ($request->httpMethod !== 'POST') {
+            throw new \Exception('Use POST method to login');
         }
         return $this->authInstance->login($request);
     }

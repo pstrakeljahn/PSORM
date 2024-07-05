@@ -29,7 +29,7 @@ class DBConnector
             $this->pdo = new PDO($dsn, $this->username, $this->password, $options);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
-            throw new \Exception("Cannot connect to Database: " . $this->error);
+            throw new \Exception('Cannot connect to Database: ' . $this->error);
             die();
         }
     }
@@ -47,7 +47,7 @@ class DBConnector
             return $stmt;
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
-            throw new \Exception("Query failed: " . $this->error);
+            throw new \Exception('Query failed: ' . $this->error);
             return null;
         }
     }

@@ -9,7 +9,7 @@ class StringField extends FieldBase
 
     public function __construct($name)
     {
-        $this->name = $name;    
+        $this->name = $name;
     }
 
     public final function getMySQLDefinition()

@@ -2,10 +2,10 @@
 
 namespace Entity;
 
-use PS\Core\Database\Entity;
 use PS\Core\Database\Fields\EnumField;
 use PS\Core\Database\Fields\IntegerField;
 use PS\Core\Database\Fields\StringField;
+use PS\Core\Database\Entity;
 
 class UserEntity extends Entity
 {
@@ -22,12 +22,12 @@ class UserEntity extends Entity
     public function fieldDefinition(): array
     {
         $firstName = (new StringField('firstName'))
-                ->setNotNullable(true)
-                ->setLength(45);
+            ->setNotNullable(true)
+            ->setLength(45);
         $age = (new IntegerField('age'))
-                ->setUnsigned(true);
+            ->setUnsigned(true);
         $role = (new EnumField('role'))
-                ->setValues(array('admin', 'other'));
+            ->setValues(array('admin', 'other'));
 
         return [$firstName, $age, $role];
     }

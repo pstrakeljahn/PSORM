@@ -2,8 +2,8 @@
 
 namespace PS\Core\Helper;
 
-use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
+use Twig\Environment;
 
 class TwigHelper
 {

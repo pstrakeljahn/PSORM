@@ -49,23 +49,21 @@ abstract class Entity
         return $this;
     }
 
-
-
     public final function getCreateTableSQL()
     {
         $fieldsSQL = [];
-        if(!$this->disableID) {
-            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setUnsigned(true) , ...$this->fields];
+        if (!$this->disableID) {
+            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setUnsigned(true), ...$this->fields];
         }
         foreach ($this->fields as $field) {
             $fieldsSQL[] = $field->getMySQLDefinition();
         }
 
-        if(!$this->disableID) {
-            $fieldsSQL[] = "PRIMARY KEY(`" . static::$primaryKey . "`)";
+        if (!$this->disableID) {
+            $fieldsSQL[] = 'PRIMARY KEY(`' . static::$primaryKey . '`)';
         }
 
-        $sql = "CREATE TABLE IF NOT EXISTS `" . $this->table . "` (" . implode(", ", $fieldsSQL) . ")";
+        $sql = 'CREATE TABLE IF NOT EXISTS `' . $this->table . '` (' . implode(', ', $fieldsSQL) . ')';
         return $sql;
     }
 }
