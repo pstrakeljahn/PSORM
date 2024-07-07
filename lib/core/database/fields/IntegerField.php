@@ -7,13 +7,7 @@ class IntegerField extends FieldBase
     private int $length = 10;
     private bool $unsigned = false;
     private bool $isBigInt = false;
-    readonly string $name;
-
-    public function __construct($name)
-    {
-        $this->name = $name;
-    }
-
+    
     public final function getMySQLDefinition()
     {
         return "`{$this->name}` " . ($this->isBigInt ? "BIGINT({$this->length})" : "INT({$this->length})") . ($this->unsigned ? ' UNSIGNED' : '');

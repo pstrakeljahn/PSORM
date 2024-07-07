@@ -39,12 +39,12 @@ class DBConnector
         return $this->pdo;
     }
 
-    public function executeQuery($sql, $params = [])
+    public function executeQuery($sql, $params = []): array
     {
         try {
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
-            return $stmt;
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             throw new \Exception('Query failed: ' . $this->error);

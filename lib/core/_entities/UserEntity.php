@@ -27,7 +27,7 @@ class UserEntity extends Entity
         $age = (new IntegerField('age'))
             ->setUnsigned(true);
         $role = (new EnumField('role'))
-            ->setValues(array('admin', 'other'));
+            ->setValues(array('admin', 'user'));
 
         return [$firstName, $age, $role];
     }

@@ -26,6 +26,7 @@ abstract class Entity
     {
         $this->entityName = ucfirst($this->setEntitname());
         $this->fields = $this->fieldDefinition();
+        $this->table = $this->setTabelName();
     }
 
     public final function _getFields(): array

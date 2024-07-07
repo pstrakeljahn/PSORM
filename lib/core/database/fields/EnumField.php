@@ -5,12 +5,6 @@ namespace PS\Core\Database\Fields;
 class EnumField extends FieldBase
 {
     private $allowedValues;
-    readonly string $name;
-
-    public function __construct($name)
-    {
-        $this->name = $name;
-    }
 
     public function getMySQLDefinition()
     {

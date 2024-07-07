@@ -6,6 +6,7 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use PS\Core\Database\Entity;
 use PS\Core\Helper\TwigHelper;
 use Config;
+use PS\Core\_devtools\Helper\EntityHelper;
 
 class BuildBasicClasses extends BuildStep
 {
@@ -23,10 +24,9 @@ class BuildBasicClasses extends BuildStep
 
     public function run(): bool
     {
-        $this->loadEntityClasses();
-        foreach ($this->entityClasses as $entityClass) {
+        $this->entityClasses = EntityHelper::loadEntityClasses();
+        foreach ($this->entityClasses as $instance) {
             /** @var Entity $instance */
-            $instance = new $entityClass;
             $arrFieldNames = [];
             foreach ($instance->_getFields() as $field) {
                 $arrFieldNames[] = $field->name;
@@ -41,19 +41,6 @@ class BuildBasicClasses extends BuildStep
             $this->createPeerClassFile($data);
         }
         return true;
-    }
-
-    private function loadEntityClasses(): void
-    {
-        $coreEntityPath = Config::BASE_PATH . 'lib/core/_entities/';
-        // $packageEntities = @todo
-        foreach (glob($coreEntityPath . '*.php') as $file) {
-            $classString = pathinfo($file)['filename'];
-            $class = 'Entity\\' . $classString;
-            if (is_subclass_of($class, Entity::class)) {
-                $this->entityClasses[] = $class;
-            }
-        }
     }
 
     private function createClassFile($data)

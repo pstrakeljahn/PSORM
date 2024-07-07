@@ -40,7 +40,7 @@ class PrettyPhpStep extends BuildStep
         }
         curl_close($ch);
         fclose($fp);
-        exec("php ".$filepath." " . Config::BASE_PATH . "build");
+        exec("php " . $filepath . " " . Config::BASE_PATH . "build > /dev/null 2>&1");
         unlink($filepath);
         return true;
     }

@@ -6,6 +6,7 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use PS\Core\_devtools\Steps\BackendStructureCreationStep;
 use PS\Core\_devtools\Steps\BuildBasicClasses;
 use PS\Core\_devtools\Steps\InstallComposerStep;
+use PS\Core\_devtools\Steps\PrepareDatabase;
 use PS\Core\_devtools\Steps\PrettyPhpStep;
 
 class BuildInstance
@@ -16,7 +17,8 @@ class BuildInstance
             BackendStructureCreationStep::class,
             InstallComposerStep::class,
             BuildBasicClasses::class,
-            PrettyPhpStep::class
+            PrettyPhpStep::class,
+            PrepareDatabase::class,
         ];
     }
 
