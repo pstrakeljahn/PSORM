@@ -2,12 +2,12 @@
 
 spl_autoload_register(function ($class) {
     if ($class === 'Config') {
-        require __DIR__ . '/../../config/Config.php';
+        require __DIR__ . '/../../../config/Config.php';
         return;
     }
 
     $prefix = 'PS\\';
-    $base_dir = __DIR__ . '/../';
+    $base_dir = __DIR__ . '/../../';
 
     $len = strlen($prefix);
     if (strncmp($prefix, $class, $len) !== 0) {

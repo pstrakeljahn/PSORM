@@ -7,6 +7,7 @@ use PS\Core\Database\Entity;
 use PS\Core\Helper\TwigHelper;
 use Config;
 use PS\Core\_devtools\Helper\EntityHelper;
+use ReflectionClass;
 
 class BuildBasicClasses extends BuildStep
 {
@@ -28,17 +29,24 @@ class BuildBasicClasses extends BuildStep
         foreach ($this->entityClasses as $instance) {
             /** @var Entity $instance */
             $arrFieldNames = [];
+            $arrRequiredFields = [];
             foreach ($instance->_getFields() as $field) {
                 $arrFieldNames[] = $field->name;
+                if($field->required) {
+                    $arrRequiredFields[] = $field->name;
+                }
             }
             $data = [
                 'className' => $instance->entityName,
                 'fields' => $arrFieldNames,
-                'requiredFields' => [],
+                'requiredFields' => $arrRequiredFields,
+                'tableName' => $instance->table,
                 'readableFields' => []
             ];
             $this->createClassFile($data);
             $this->createPeerClassFile($data);
+            $this->createBasicClass($instance, $data);
+            $this->createPeerBasicClass($instance, $data);
         }
         return true;
     }
@@ -47,13 +55,37 @@ class BuildBasicClasses extends BuildStep
     {
         $templatePath = Config::BASE_PATH . 'lib/core/_devtools/templates/Basic.twig';
         $classDefinition = TwigHelper::renderTemplate($templatePath, $data);
-        file_put_contents(sprintf('%sbuild/basic/%s.php', Config::BASE_PATH, $data['className']), $classDefinition);
+        file_put_contents(sprintf('%sbuild/basic/%sBasic.php', Config::BASE_PATH, $data['className']), $classDefinition);
     }
 
     private function createPeerClassFile($data)
     {
         $templatePath = Config::BASE_PATH . 'lib/core/_devtools/templates/PeerBasic.twig';
         $classDefinition = TwigHelper::renderTemplate($templatePath, $data);
-        file_put_contents(sprintf('%sbuild/peerBasic/%sPeer.php', Config::BASE_PATH, $data['className']), $classDefinition);
+        file_put_contents(sprintf('%sbuild/peerBasic/%sPeerBasic.php', Config::BASE_PATH, $data['className']), $classDefinition);
+    }
+
+    private function createBasicClass($instance, $data)
+    {
+        $reflection = new ReflectionClass($instance);
+        $filePath = implode("/", array_slice(explode("/", $reflection->getFileName()), 0, -2)) . "/" . $instance->entityName . ".php";
+        if(!file_exists($filePath)) {
+            $templatePath = Config::BASE_PATH . 'lib/core/_devtools/templates/ClassTemplate.twig';
+            $classDefinition = TwigHelper::renderTemplate($templatePath, $data);
+            file_put_contents(sprintf($filePath, Config::BASE_PATH, $data['className']), $classDefinition);
+        }
+        
+    }
+
+    private function createPeerBasicClass($instance, $data)
+    {
+        $reflection = new ReflectionClass($instance);
+        $filePath = implode("/", array_slice(explode("/", $reflection->getFileName()), 0, -2)) . "/" . $instance->entityName . "Peer.php";
+        if(!file_exists($filePath)) {
+            $templatePath = Config::BASE_PATH . 'lib/core/_devtools/templates/PeerClassTemplate.twig';
+            $classDefinition = TwigHelper::renderTemplate($templatePath, $data);
+            file_put_contents(sprintf($filePath, Config::BASE_PATH, $data['className']), $classDefinition);
+        }
+        
     }
 }

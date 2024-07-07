@@ -5,6 +5,7 @@ namespace PS\Core\Database\Fields;
 abstract class FieldBase
 {
     readonly string $name;
+    public bool $required = false;
     private bool $notNullable = false;
 
     public function __construct($name)
@@ -15,6 +16,12 @@ abstract class FieldBase
     public final function setNotNullable(bool $val)
     {
         $this->notNullable = $val;
+        return $this;
+    }
+
+    public final function setRequired(bool $required)
+    {
+        $this->required = $required;
         return $this;
     }
 

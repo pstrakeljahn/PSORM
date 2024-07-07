@@ -1,6 +1,10 @@
 <?php
 
-class {{ className }} {
+use PS\Core\Rdw\RdwPeerBasic;
+
+class {{ className }}PeerBasic extends RdwPeerBasic {
+    const TABLE_NAME = '{{ tableName }}';
+    const ID = 'ID';
     {%- for field in fields %}
     const {{ field|upper }} = '{{ field }}';
     {%- endfor %}

@@ -1,3 +1,4 @@
 .vscode
 build
 logs
+public/test.php

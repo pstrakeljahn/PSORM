@@ -6,6 +6,7 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use PS\Core\_devtools\Helper\EntityHelper;
 use PS\Core\Database\DBConnector;
 use PS\Core\Database\Entity;
+use PS\Core\Database\Fields\IntegerField;
 
 class PrepareDatabase extends BuildStep
 {
@@ -54,7 +55,7 @@ class PrepareDatabase extends BuildStep
             $existingColumns[$row['Field']] = $row;
         }
 
-        $desiredColumns = self::getDesiredColumns($entityInstance->_getFields());
+        $desiredColumns = self::getDesiredColumns($entityInstance);
 
         $alterTableQueries = [];
         foreach ($desiredColumns as $column => $definition) {
@@ -76,12 +77,16 @@ class PrepareDatabase extends BuildStep
         if (!empty($alterTableQueries)) {
             $alterTableSQL = "ALTER TABLE `users` " . implode(', ', $alterTableQueries);
             $this->db->executeQuery($alterTableSQL);
-            echo "\t- Table '$entityInstance->table' updated\n";
         }
     }
 
-    private static function getDesiredColumns(array $fields): array
+    private static function getDesiredColumns($entityInstance): array
     {
+        if(!$entityInstance->disableID) {
+            $fields = [(new IntegerField($entityInstance::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true), ...$entityInstance->_getFields()];
+        } else {
+            $fields = $entityInstance->_getFields();
+        }
         $returnArray = [];
         foreach ($fields as $field) {
             $returnArray[$field->name] = str_replace("`$field->name` ", "", $field->getMySQLDefinition());

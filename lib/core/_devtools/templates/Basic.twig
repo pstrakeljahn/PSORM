@@ -1,11 +1,16 @@
 <?php
 
-class {{ className }} {
-{# newLine #}
+use PS\Core\Rdw\RdwBasic;
+
+class {{ className }}Basic extends RdwBasic {
+    protected $ID;
     {%- for field in fields %}
     protected ${{ field }};
-{# newLine #}
     {%- endfor %}
+
+    public function getID() {
+        return $this->ID;
+    }
 
     {%- for field in fields %}
 
@@ -16,6 +21,5 @@ class {{ className }} {
     public function set{{ field|capitalize }}(${{ field }}) {
         $this->{{ field }} = ${{ field }};
     }
-{# newLine #}
     {%- endfor %}
 }

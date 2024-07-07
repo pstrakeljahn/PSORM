@@ -1,8 +1,8 @@
 <?php
 
 spl_autoload_register(function ($class) {
-    $base_dir = __DIR__ . '/../';
-    $coreEntityPath = $base_dir . 'core/_entities/';
+    $base_dir = __DIR__ . '/../../';
+    $coreEntityPath = $base_dir . 'core/src/_entities/';
 
     // @todo Include packeges
     $className = str_replace('Entity\\', '', $class);

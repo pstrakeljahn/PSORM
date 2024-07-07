@@ -7,10 +7,10 @@ use PS\Core\Database\Fields\IntegerField;
 abstract class Entity
 {
     readonly string $table;
-    protected static string $primaryKey = 'ID';
+    public static string $primaryKey = 'ID';
     protected array $altPrimaryKeys = [];
     protected $fields = [];
-    protected bool $disableID = false;
+    public bool $disableID = false;
     readonly string $entityName;
 
     abstract public function fieldDefinition(): array;
@@ -54,7 +54,7 @@ abstract class Entity
     {
         $fieldsSQL = [];
         if (!$this->disableID) {
-            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setUnsigned(true), ...$this->fields];
+            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true), ...$this->fields];
         }
         foreach ($this->fields as $field) {
             $fieldsSQL[] = $field->getMySQLDefinition();
