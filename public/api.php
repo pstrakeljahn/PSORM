@@ -1,5 +1,6 @@
 <?php
 
+use PS\Core\_devtools\Helper\ApiHelper;
 use PS\Core\Api\Request;
 use PS\Core\Api\Response;
 use PS\Core\Api\Session;
@@ -19,12 +20,15 @@ try {
     if (count($request->segments) >= $request->apiIndex + 3) {
         switch ($request->segments[$request->apiIndex + 2]) {
             case Request::TYPE_OBJ:
+                $additionalMeta = [];
                 if (isset($request->segments[$request->apiIndex + 3])) {
                     $objectName = $request->segments[$request->apiIndex + 3];
-
                     if (isset($request->segments[$request->apiIndex + 4])) {
                         $objectID = $request->segments[$request->apiIndex + 4];
-                        $data = ['ID' => $objectID];
+                        $data = ApiHelper::findObject($objectName, $objectID);
+                    } else {
+                        $data = ApiHelper::findObject($objectName);
+                        $additionalMeta['count'] = count($data);
                     }
                 }
                 break;
@@ -32,7 +36,11 @@ try {
                 $data = $sessionInstance->login($request);
                 break;
         }
-        (new Response)->setError($error)->setData($data)->getResponse();
+        (new Response)
+            ->setError($error)
+            ->setData($data)
+            ->setStatus($data === null ? Response::NOT_FOUND : Response::STATUS_OK)
+            ->getResponse($additionalMeta);
     }
 } catch (\Exception $e) {
     (new Response)

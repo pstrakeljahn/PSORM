@@ -8,8 +8,9 @@ class Response
 {
     const STATUS_OK = 200;
     const UNAUTHORIZED = 401;
+    const NOT_FOUND = 404;
     const SERVER_ERROR = 500;
-    const ARR_STATUSCODE = [self::STATUS_OK, self::UNAUTHORIZED, self::SERVER_ERROR];
+    const ARR_STATUSCODE = [self::STATUS_OK, self::UNAUTHORIZED, self::NOT_FOUND, self::SERVER_ERROR];
     const ALLOWED_METHODES = ['OPTIONS', 'GET', 'POST', 'PUT', 'DELETE'];
 
     private int $statusCode = self::STATUS_OK;
@@ -17,13 +18,14 @@ class Response
     private array $error = [];
     private array $debug = [];
 
-    public final function getResponse(): string
+    public final function getResponse(array $additonalMeta = []): string
     {
         $this->setHeader();
         $arrResponse = [
             'meta' => [
                 'method' => $_SERVER['REQUEST_METHOD'],
                 'status' => $this->statusCode,
+                ...$additonalMeta
             ],
             'data' => $this->data,
             'error' => $this->error,

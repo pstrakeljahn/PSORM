@@ -8,13 +8,13 @@ use PDOException;
 
 class DBConnector
 {
-    private $host = Config::HOST;
-    private $db_name = Config::DATABASE;
-    private $username = Config::USERNAME;
-    private $password = Config::PASSWORD;
-    private $charset = Config::CHARSET;
-    private $pdo;
-    private $error;
+    private string $host = Config::HOST;
+    private string $db_name = Config::DATABASE;
+    private string $username = Config::USERNAME;
+    private string $password = Config::PASSWORD;
+    private string $charset = Config::CHARSET;
+    private PDO $pdo;
+    private string $error;
 
     public function __construct()
     {

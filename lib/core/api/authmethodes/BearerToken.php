@@ -4,6 +4,9 @@ namespace PS\Core\Api\Authmethodes;
 
 use PS\Core\Api\Request;
 use Config;
+use Object\User;
+use ObjectPeer\UserPeer;
+use PS\Core\Database\Criteria;
 
 class BearerToken implements AuthMethodeInterface
 {
@@ -25,9 +28,21 @@ class BearerToken implements AuthMethodeInterface
         }
     }
 
-    public function getUser(): int
+    public function getUser(array $request): ?User
     {
-        return 1;
+        $arrUser = UserPeer::find(
+            Criteria::getInstace()
+                ->add(UserPeer::USERNAME, $request['username'])
+                ->addLimit(0, 1)
+        );
+        if(!count($arrUser)) {
+            throw new \Exception('Invalid Crentials');
+        } else {
+            if(password_verify($request['password'], $arrUser[0]->getPassword())) {
+                return $arrUser[0] ;
+            }
+        }
+        return null;
     }
 
     public function getLoggedIn(): bool
@@ -43,8 +58,11 @@ class BearerToken implements AuthMethodeInterface
         if (!isset($request->parameters['password'])) {
             throw new \Exception('Password has to be set.');
         }
-        $paramaters = $request->parameters;
-        return ['token' => self::createToken()];
+        $user = self::getUser($request->parameters);
+        if(is_null($user)) {
+            throw new \Exception('Invalid credentials');
+        }
+        return ['token' => self::createToken($user)];
     }
 
     private static function parseToken(): ?array
@@ -56,15 +74,15 @@ class BearerToken implements AuthMethodeInterface
         return self::validateToken($token);
     }
 
-    public static function createToken(): string
+    public static function createToken(User $user): string
     {
         $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
         $dataArray = self::TOKEN_BODY;
-        $dataArray['UserID'] = 1;
-        $dataArray['username'] = null;
-        $dataArray['firstname'] = null;
-        $dataArray['lastname'] = null;
-        $dataArray['mail'] = null;
+        $dataArray['UserID'] = $user->getID();
+        $dataArray['username'] = $user->getUsername();
+        $dataArray['firstname'] = $user->getFirstname();
+        $dataArray['lastname'] = $user->getLastname();
+        $dataArray['mail'] = $user->getMail();
         $dataArray['exp'] = time() + Config::TOKEN_EXPIRED_IN_S;
         $payload = json_encode(
             $dataArray

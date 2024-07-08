@@ -8,6 +8,10 @@ class {{ className }}Basic extends RdwBasic {
         parent::__construct();
     }
 
+    public function getID() {
+        return $this->properties['ID'];
+    }
+
     {%- for field in fields %}
     public function get{{ field|capitalize }}() {
         return $this->properties['{{ field }}'];
