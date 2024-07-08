@@ -54,7 +54,7 @@ abstract class Entity
     {
         $fieldsSQL = [];
         if (!$this->disableID) {
-            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true), ...$this->fields];
+            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true)->setAutoIncrement(true), ...$this->fields];
         }
         foreach ($this->fields as $field) {
             $fieldsSQL[] = $field->getMySQLDefinition();

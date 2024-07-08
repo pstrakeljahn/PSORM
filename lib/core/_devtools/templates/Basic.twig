@@ -3,23 +3,19 @@
 use PS\Core\Rdw\RdwBasic;
 
 class {{ className }}Basic extends RdwBasic {
-    protected $ID;
-    {%- for field in fields %}
-    protected ${{ field }};
-    {%- endfor %}
 
-    public function getID() {
-        return $this->ID;
+    public function __construct() {
+        parent::__construct();
     }
 
     {%- for field in fields %}
-
     public function get{{ field|capitalize }}() {
-        return $this->{{ field }};
+        return $this->properties['{{ field }}'];
     }
 
     public function set{{ field|capitalize }}(${{ field }}) {
-        $this->{{ field }} = ${{ field }};
+        $this->properties['{{ field }}'] = ${{ field }};
+        return $this;
     }
     {%- endfor %}
 }

@@ -9,6 +9,12 @@ class {{ className }}PeerBasic extends RdwPeerBasic {
     const {{ field|upper }} = '{{ field }}';
     {%- endfor %}
 
+    const PROPERTIES = [
+    'ID',{%- for field in fields %}
+    '{{ field }}'{{ loop.last ? '' : ',' }}
+    {%- endfor %}
+    ];
+
     const REQUIRED = [
         {%- for required in requiredFields %}
         '{{ required }}'{{ loop.last ? '' : ',' }}

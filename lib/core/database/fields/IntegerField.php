@@ -7,10 +7,11 @@ class IntegerField extends FieldBase
     private int $length = 10;
     private bool $unsigned = false;
     private bool $isBigInt = false;
-    
+    private bool $autoIncrement = false;
+
     public final function getMySQLDefinition()
     {
-        return "`{$this->name}` " . ($this->isBigInt ? "BIGINT({$this->length})" : "INT({$this->length})") . ($this->unsigned ? ' UNSIGNED' : '');
+        return "`{$this->name}` " . ($this->isBigInt ? "BIGINT({$this->length})" : "INT({$this->length})") . ($this->unsigned ? ' UNSIGNED' : '') . ($this->autoIncrement ? ' AUTO_INCREMENT' : '');
     }
 
     public final function setLength(int $length): self
@@ -28,6 +29,12 @@ class IntegerField extends FieldBase
     public final function setBigInt(bool $val)
     {
         $this->isBigInt = $val;
+        return $this;
+    }
+
+    public final function setAutoIncrement(bool $val)
+    {
+        $this->autoIncrement = $val;
         return $this;
     }
 }

@@ -39,11 +39,22 @@ class DBConnector
         return $this->pdo;
     }
 
-    public function executeQuery($sql, $params = []): array
+    public function executeQuery($sql, $params = [], $returnPDO = false)
     {
         try {
             $stmt = $this->pdo->prepare($sql);
-            $stmt->execute($params);
+            foreach ($params as $key => $value) {
+                if ($value === null) {
+                    $paramType = PDO::PARAM_NULL;
+                } else {
+                    $paramType = is_int($value) ? PDO::PARAM_INT : (is_bool($value) ? PDO::PARAM_BOOL : PDO::PARAM_STR);
+                }
+                $stmt->bindValue(':' . $key, $value, $paramType);
+            }
+            $stmt->execute();
+            if ($returnPDO) {
+                return $this->pdo;
+            }
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
