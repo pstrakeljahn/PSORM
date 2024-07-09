@@ -14,7 +14,6 @@ spl_autoload_register(function ($class) {
         return;
     }
 
-    $class = str_replace('\\Source\\', '\\src\\', $class);
     $class_name = str_replace($prefix, '', $class);
 
     $arrPath = explode('\\', $class_name);
@@ -25,5 +24,22 @@ spl_autoload_register(function ($class) {
 
     if (file_exists($file)) {
         require $file;
+        return;
+    }
+
+    if ($arrPath[0] === "Package") {
+        $path = [];
+        for ($i = 2; $i <= count($arrPath) - 1; $i++) {
+            $path[] = $arrPath[$i];
+        }
+        if ($arrPath[1] === "Core") {
+            $file = sprintf("%score/%s%s/%s.php", $base_dir, $arrPath[2] !== "Meta" ? "src/" : '' ,strtolower(implode("/", $path)), $filename);
+        } else {
+            $file = sprintf("%spackages/%s/%s%s/%s.php", $base_dir, strtolower($arrPath[1]), $arrPath[2] !== "Meta" ? "src/" : '' , strtolower(implode("/", $path)), $filename);
+        }
+        if (file_exists($file)) {
+            require $file;
+            return;
+        }
     }
 });

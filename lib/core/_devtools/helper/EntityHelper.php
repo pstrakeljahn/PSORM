@@ -10,9 +10,11 @@ class EntityHelper
     public static final function loadEntityClasses(): array
     {
         $returnArray = [];
-        $coreEntityPath = Config::BASE_PATH . 'lib/core/src/_entities/';
-        // $packageEntities = @todo
-        foreach (glob($coreEntityPath . '*.php') as $file) {
+        $files = [
+            ...glob(Config::BASE_PATH . 'lib/core/src/_entities/*.php'),
+            ...glob(Config::BASE_PATH . 'lib/packages/*/_entities/*.php')
+        ];
+        foreach ($files as $file) {
             $classString = pathinfo($file)['filename'];
             $class = 'Entity\\' . $classString;
             if (is_subclass_of($class, Entity::class)) {
