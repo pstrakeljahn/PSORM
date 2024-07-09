@@ -2,6 +2,7 @@
 
 namespace PS\Core\Database;
 
+use PS\Core\Database\Fields\DateField;
 use PS\Core\Database\Fields\IntegerField;
 
 abstract class Entity
@@ -11,6 +12,7 @@ abstract class Entity
     protected array $altPrimaryKeys = [];
     protected $fields = [];
     public bool $disableID = false;
+    public bool $withoutMeta = false;
     readonly string $entityName;
 
     abstract public function fieldDefinition(): array;
@@ -50,11 +52,28 @@ abstract class Entity
         return $this;
     }
 
+    public final function setWithoutMeta(bool $val): self
+    {
+        $this->withoutMeta = $val;
+        return $this;
+    }
+
     public final function getCreateTableSQL()
     {
         $fieldsSQL = [];
         if (!$this->disableID) {
-            $this->fields = [(new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true)->setAutoIncrement(true), ...$this->fields];
+            $this->fields = [
+                (new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true)->setAutoIncrement(true),
+                ...$this->fields];
+            if(!$this->withoutMeta) {
+                $this->fields = [
+                    ...$this->fields,
+                    (new DateField("_createdAt"))->setWithTime(true),
+                    (new IntegerField("_createdBy"))->setLength(10)->setUnsigned(true),
+                    (new DateField("_modfiedAt"))->setWithTime(true),
+                    (new IntegerField("_modifiedBy"))->setLength(10)->setUnsigned(true)
+                ];
+            }
         }
         foreach ($this->fields as $field) {
             $fieldsSQL[] = $field->getMySQLDefinition();

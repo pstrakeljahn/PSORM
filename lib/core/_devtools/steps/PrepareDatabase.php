@@ -47,7 +47,7 @@ class PrepareDatabase extends BuildStep
 
     private function alterTable(Entity $entityInstance): void
     {
-        $columnsQuery = "SHOW COLUMNS FROM `users`";
+        $columnsQuery = "SHOW COLUMNS FROM `$entityInstance->table`";
         $columnsResult = $this->db->executeQuery($columnsQuery);
 
         $existingColumns = [];
@@ -75,7 +75,7 @@ class PrepareDatabase extends BuildStep
         }
 
         if (!empty($alterTableQueries)) {
-            $alterTableSQL = "ALTER TABLE `users` " . implode(', ', $alterTableQueries);
+            $alterTableSQL = "ALTER TABLE `$entityInstance->table` " . implode(', ', $alterTableQueries);
             $this->db->executeQuery($alterTableSQL);
         }
     }

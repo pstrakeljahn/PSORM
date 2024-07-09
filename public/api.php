@@ -17,10 +17,10 @@ try {
         throw new \Exception('Not logged in');
     }
     $error = null;
+    $additionalMeta = [];
     if (count($request->segments) >= $request->apiIndex + 3) {
         switch ($request->segments[$request->apiIndex + 2]) {
             case Request::TYPE_OBJ:
-                $additionalMeta = [];
                 if (isset($request->segments[$request->apiIndex + 3])) {
                     $objectName = $request->segments[$request->apiIndex + 3];
                     if (isset($request->segments[$request->apiIndex + 4])) {

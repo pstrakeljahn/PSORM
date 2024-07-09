@@ -1,6 +1,6 @@
 <?php
 
-namespace PS\Package\Gans\Helper;
+namespace PS\Package\Template\Helper;
 
 class TemplateHelper {
 
