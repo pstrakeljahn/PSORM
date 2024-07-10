@@ -21,7 +21,9 @@ class BackendStructureCreationStep extends BuildStep
     {
         $structure = [
             'build' => ['peerBasic', 'basic'],
-            'logs' => null
+            'logs' => null,
+            'files' => null,
+            'tmp' => null
         ];
 
         $basePath = Config::BASE_PATH;

@@ -90,7 +90,8 @@ class RdwBasic
     {
         $properties = $this->settings['peerClass']::PROPERTIES;
         $_properties = $properties;
-        unset($_properties[0]);
+        $key = array_search('ID', $properties);
+        unset($_properties[$key]);
 
         $_propertyData = [];
         foreach ($_properties as $property) {
