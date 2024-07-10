@@ -125,10 +125,13 @@ class RdwBasic
         }
     }
 
-    public final function asArray(): array
+    public final function asArray(bool $forApi = false): array
     {
         $returnArray = [];
         foreach ($this->properties as $key => $value) {
+            if(!in_array($key, $this->settings['peerClass']::API_READABLE) && $forApi) {
+                continue;
+            }
             $returnArray[$key] = $value;
         }
         return $returnArray;

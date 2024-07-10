@@ -26,6 +26,7 @@ class UserEntity extends Entity
         $password = (new StringField('password'))
             ->setNotNullable(true)
             ->setRequired(true)
+            ->setApiReadable(false)
             ->setLength(255);
         $mail = (new StringField('mail'))
             ->setNotNullable(false)

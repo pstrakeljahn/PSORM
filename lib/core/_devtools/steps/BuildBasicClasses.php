@@ -28,32 +28,41 @@ class BuildBasicClasses extends BuildStep
         $this->entityClasses = EntityHelper::loadEntityClasses();
         foreach ($this->entityClasses as $instance) {
             /** @var Entity $instance */
-            $arrFieldNames = [];
-            $arrRequiredFields = [];
-            $arrFieldsToRemove = [...$instance->arrPrimaryKey, ...$instance->arrMetaFields];
-            foreach ($instance->_getFields() as $field) {
-                if (in_array($field, $arrFieldsToRemove)) {
-                    continue;
-                }
-                $arrFieldNames[] = $field->name;
-                if ($field->required) {
-                    $arrRequiredFields[] = $field->name;
-                }
-            }
-            $data = [
-                'className' => $instance->entityName,
-                'fields' => $arrFieldNames,
-                'requiredFields' => $arrRequiredFields,
-                'tableName' => $instance->table,
-                'readableFields' => [],
-                'metaFields' => array_map(function($obj) {return $obj->name;}, $instance->arrMetaFields)
-            ];
+            $data = $this->buildDataArray($instance);
             $this->createClassFile($data);
             $this->createPeerClassFile($data);
             $this->createBasicClass($instance, $data);
             $this->createPeerBasicClass($instance, $data);
         }
         return true;
+    }
+    
+    private function buildDataArray(Entity $instance): array
+    {
+        $arrFieldNames = [];
+        $arrRequiredFields = [];
+        $arrApiReadable = [];
+        $arrFieldsToRemove = [...$instance->arrPrimaryKey, ...$instance->arrMetaFields];
+        foreach ($instance->_getFields() as $field) {
+            if ($field->apiReadable) {
+                $arrApiReadable[] = $field->name;
+            }
+            if (in_array($field, $arrFieldsToRemove)) {
+                continue;
+            }
+            $arrFieldNames[] = $field->name;
+            if ($field->required) {
+                $arrRequiredFields[] = $field->name;
+            }
+        }
+        return [
+            'className' => $instance->entityName,
+            'fields' => $arrFieldNames,
+            'requiredFields' => $arrRequiredFields,
+            'tableName' => $instance->table,
+            'readableFields' => $arrApiReadable ,
+            'metaFields' => array_map(function($obj) {return $obj->name;}, $arrFieldsToRemove)
+        ];
     }
 
     private function createClassFile($data)

@@ -7,6 +7,7 @@ abstract class FieldBase
     readonly string $name;
     public bool $required = false;
     private bool $notNullable = false;
+    public bool $apiReadable = true;
 
     public function __construct($name)
     {
@@ -22,6 +23,12 @@ abstract class FieldBase
     public final function setRequired(bool $required)
     {
         $this->required = $required;
+        return $this;
+    }
+
+    public final function setApiReadable(bool $val)
+    {
+        $this->apiReadable = $val;
         return $this;
     }
 
