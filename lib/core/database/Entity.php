@@ -14,6 +14,8 @@ abstract class Entity
     public bool $disableID = false;
     public bool $withoutMeta = false;
     readonly string $entityName;
+    readonly array $arrPrimaryKey;
+    readonly array $arrMetaFields;
 
     abstract public function fieldDefinition(): array;
     abstract protected function setEntitname(): string;
@@ -29,10 +31,35 @@ abstract class Entity
         $this->entityName = ucfirst($this->setEntitname());
         $this->fields = $this->fieldDefinition();
         $this->table = $this->setTabelName();
+        if (!$this->disableID) {
+            $this->arrPrimaryKey = [
+                (new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true)->setAutoIncrement(true),
+            ];
+        }
+        if (!$this->withoutMeta) {
+            $this->arrMetaFields = [
+                (new DateField("_createdAt"))->setWithTime(true),
+                (new IntegerField("_createdBy"))->setLength(10)->setUnsigned(true),
+                (new DateField("_modfiedAt"))->setWithTime(true),
+                (new IntegerField("_modifiedBy"))->setLength(10)->setUnsigned(true)
+            ];
+        }
     }
 
     public final function _getFields(): array
     {
+        if (!$this->disableID) {
+            $this->fields = [
+                ...$this->arrPrimaryKey,
+                ...$this->fields
+            ];
+        }
+        if (!$this->withoutMeta) {
+            $this->fields = [
+                ...$this->fields,
+                ...$this->arrMetaFields
+            ];
+        }
         return $this->fields;
     }
 
@@ -61,21 +88,7 @@ abstract class Entity
     public final function getCreateTableSQL()
     {
         $fieldsSQL = [];
-        if (!$this->disableID) {
-            $this->fields = [
-                (new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true)->setAutoIncrement(true),
-                ...$this->fields];
-            if(!$this->withoutMeta) {
-                $this->fields = [
-                    ...$this->fields,
-                    (new DateField("_createdAt"))->setWithTime(true),
-                    (new IntegerField("_createdBy"))->setLength(10)->setUnsigned(true),
-                    (new DateField("_modfiedAt"))->setWithTime(true),
-                    (new IntegerField("_modifiedBy"))->setLength(10)->setUnsigned(true)
-                ];
-            }
-        }
-        foreach ($this->fields as $field) {
+        foreach ($this->_getFields() as $field) {
             $fieldsSQL[] = $field->getMySQLDefinition();
         }
 

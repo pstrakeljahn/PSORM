@@ -8,9 +8,14 @@ class {{ className }}PeerBasic extends RdwPeerBasic {
     {%- for field in fields %}
     const {{ field|upper }} = '{{ field }}';
     {%- endfor %}
+    {%- for field in metaFields %}
+    const {{ field|upper }} = '{{ field }}';
+    {%- endfor %}
 
     const PROPERTIES = [
     'ID',{%- for field in fields %}
+    '{{ field }}'{{ loop.last ? '' : ',' }}
+    {%- endfor %},{%- for field in metaFields %}
     '{{ field }}'{{ loop.last ? '' : ',' }}
     {%- endfor %}
     ];

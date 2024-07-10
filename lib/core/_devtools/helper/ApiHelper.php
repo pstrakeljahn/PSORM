@@ -2,6 +2,7 @@
 
 namespace PS\Core\_devtools\Helper;
 
+use PS\Core\Api\Request;
 use PS\Core\Database\Criteria;
 
 class ApiHelper
@@ -14,5 +15,20 @@ class ApiHelper
         } else {
             return $peerClass::find(Criteria::getInstace(), true);
         }
+    }
+
+    public static final function saveObject(string $objName, $id = null)
+    {
+        $request = Request::getInstance();
+        if(!is_null($id)) {
+            $peerClass = "ObjectPeer\\" . $objName . "Peer";
+            $instance = $peerClass::findById($id);
+        } else {
+            $class = "Object\\" . $objName;
+            $instance = new $class;
+        }
+        $instance->setPropertiesAsArray($request->parameters);
+        $instance->save();
+        return $instance->asArray();
     }
 }

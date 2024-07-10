@@ -58,9 +58,10 @@ class PrepareDatabase extends BuildStep
         $desiredColumns = self::getDesiredColumns($entityInstance);
 
         $alterTableQueries = [];
+
         foreach ($desiredColumns as $column => $definition) {
             if (isset($existingColumns[$column])) {
-                if ($existingColumns[$column]['Type'] != $definition) {
+                if (!$this->compareColumnDefinition($existingColumns[$column], $definition)) {
                     $alterTableQueries[] = "MODIFY COLUMN `$column` $definition";
                 }
             } else {
@@ -82,15 +83,27 @@ class PrepareDatabase extends BuildStep
 
     private static function getDesiredColumns($entityInstance): array
     {
-        if(!$entityInstance->disableID) {
-            $fields = [(new IntegerField($entityInstance::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true), ...$entityInstance->_getFields()];
-        } else {
-            $fields = $entityInstance->_getFields();
-        }
+        $fields = $entityInstance->_getFields();
         $returnArray = [];
         foreach ($fields as $field) {
             $returnArray[$field->name] = str_replace("`$field->name` ", "", $field->getMySQLDefinition());
         }
         return $returnArray;
+    }
+
+    private function compareColumnDefinition(array $existingColumn, string $desiredDefinition): bool
+    {
+        $currentDefinition = $existingColumn['Type'];
+        if ($existingColumn['Null'] === 'NO') {
+            $currentDefinition .= ' NOT NULL';
+        }
+        if (!empty($existingColumn['Default'])) {
+            $currentDefinition .= " DEFAULT '{$existingColumn['Default']}'";
+        }
+        if ($existingColumn['Extra']) {
+            $currentDefinition .= ' ' . $existingColumn['Extra'];
+        }
+
+        return strtolower(trim($currentDefinition)) === strtolower(trim($desiredDefinition));
     }
 }

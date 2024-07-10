@@ -22,4 +22,10 @@ class {{ className }}Basic extends RdwBasic {
         return $this;
     }
     {%- endfor %}
+
+    {%- for field in metaFields %}
+    public function get{{ field }}() {
+        return $this->properties['{{ field }}'];
+    }
+    {%- endfor %}
 }

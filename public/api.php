@@ -17,6 +17,7 @@ try {
         throw new \Exception('Not logged in');
     }
     $error = null;
+    $status = null;
     $additionalMeta = [];
     if (count($request->segments) >= $request->apiIndex + 3) {
         switch ($request->segments[$request->apiIndex + 2]) {
@@ -25,10 +26,19 @@ try {
                     $objectName = $request->segments[$request->apiIndex + 3];
                     if (isset($request->segments[$request->apiIndex + 4])) {
                         $objectID = $request->segments[$request->apiIndex + 4];
-                        $data = ApiHelper::findObject($objectName, $objectID);
+                        if ($request->httpMethod === 'GET') {
+                            $data = ApiHelper::findObject($objectName, $objectID);
+                        } else if ($request->httpMethod === 'PATCH') {
+                            $data = ApiHelper::saveObject($objectName, $objectID);
+                        }
                     } else {
-                        $data = ApiHelper::findObject($objectName);
-                        $additionalMeta['count'] = count($data);
+                        if ($request->httpMethod === 'GET') {
+                            $data = ApiHelper::findObject($objectName);
+                            $additionalMeta['count'] = count($data);
+                        } else if ($request->httpMethod === 'POST') {
+                            $data = ApiHelper::saveObject($objectName);
+                            $status = Response::CREATED;
+                        }
                     }
                 }
                 break;
@@ -39,7 +49,7 @@ try {
         (new Response)
             ->setError($error)
             ->setData($data)
-            ->setStatus($data === null ? Response::NOT_FOUND : Response::STATUS_OK)
+            ->setStatus($status !== null ? $status : ($data === null ? Response::NOT_FOUND : Response::STATUS_OK))
             ->getResponse($additionalMeta);
     }
 } catch (\Exception $e) {

@@ -124,4 +124,13 @@ class RdwBasic
             $pdo = $this->db->executeQuery($sql, $_propertyData, true);
         }
     }
+
+    public final function asArray(): array
+    {
+        $returnArray = [];
+        foreach ($this->properties as $key => $value) {
+            $returnArray[$key] = $value;
+        }
+        return $returnArray;
+    }
 }
