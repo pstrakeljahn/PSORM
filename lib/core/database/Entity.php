@@ -37,9 +37,9 @@ abstract class Entity
         if (!$this->withoutMeta) {
             $this->arrMetaFields = [
                 (new DateField("_createdAt"))->setWithTime(true)->setNotNullable(false),
-                (new IntegerField("_createdBy"))->setLength(10)->setNotNullable(false)->setUnsigned(true)->setForeignKey(UserPeer::TABLE_NAME, UserPeer::ID),
+                (new IntegerField("_createdBy"))->setLength(10)->setNotNullable(false)->setUnsigned(true)->setForeignKey('users', 'ID'),
                 (new DateField("_modfiedAt"))->setWithTime(true)->setNotNullable(false),
-                (new IntegerField("_modifiedBy"))->setLength(10)->setNotNullable(false)->setUnsigned(true)->setForeignKey(UserPeer::TABLE_NAME, UserPeer::ID)
+                (new IntegerField("_modifiedBy"))->setLength(10)->setNotNullable(false)->setUnsigned(true)->setForeignKey('users', 'ID')
             ];
         }
     }

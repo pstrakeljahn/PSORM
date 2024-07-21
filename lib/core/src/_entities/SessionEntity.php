@@ -24,7 +24,7 @@ class SessionEntity extends Entity
         $userID = (new IntegerField('UserID'))
             ->setNotNullable(false)
             ->setRequired(true)
-            ->setForeignKey(UserPeer::TABLE_NAME, UserPeer::ID);
+            ->setForeignKey('users', 'ID');
         $sessionToken = (new StringField('sessionToken'))
             ->setNotNullable(false)
             ->setLength(255);

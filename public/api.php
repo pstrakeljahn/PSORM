@@ -38,6 +38,10 @@ try {
                         } else if ($request->httpMethod === 'POST') {
                             $data = ApiHelper::saveObject($objectName);
                             $status = Response::CREATED;
+                        } else if ($request->httpMethod === 'OPTIONS') {
+                            $peerClass = "ObjectPeer\\" . $objectName . "Peer";
+                            $data = $peerClass::OPTIONS;
+                            $status = Response::STATUS_OK;
                         }
                     }
                 }

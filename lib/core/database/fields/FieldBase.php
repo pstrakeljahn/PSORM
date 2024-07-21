@@ -6,8 +6,17 @@ abstract class FieldBase
 {
     readonly string $name;
     public bool $required = false;
-    private bool $notNullable = false;
+    protected bool $notNullable = false;
     public bool $apiReadable = true;
+
+    // Datatypes
+    public const BIGINT = "bigint";
+    public const BOOLEAN = "boolean";
+    public const DATE = "date";
+    public const DATETIME = "datetime";
+    public const ENUM = "enum";
+    public const INT = "int";
+    public const VARCHAR = "varchar";
 
     public function __construct($name)
     {

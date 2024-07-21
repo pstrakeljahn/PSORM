@@ -4,6 +4,9 @@ use PS\Core\Rdw\RdwPeerBasic;
 
 class {{ className }}PeerBasic extends RdwPeerBasic {
     const TABLE_NAME = '{{ tableName }}';
+    {%- for field in primaryKey %}
+    const {{ field|upper }} = '{{ field }}';
+    {%- endfor %}
     {%- for field in fields %}
     const {{ field|upper }} = '{{ field }}';
     {%- endfor %}
@@ -12,7 +15,9 @@ class {{ className }}PeerBasic extends RdwPeerBasic {
     {%- endfor %}
 
     const PROPERTIES = [
-    {%- for field in fields %}
+    {%- for field in primaryKey %}
+    '{{ field }}'{{ loop.last ? '' : ',' }}
+    {%- endfor %},{%- for field in fields %}
     '{{ field }}'{{ loop.last ? '' : ',' }}
     {%- endfor %},{%- for field in metaFields %}
     '{{ field }}'{{ loop.last ? '' : ',' }}
@@ -30,4 +35,6 @@ class {{ className }}PeerBasic extends RdwPeerBasic {
         '{{ readable }}'{{ loop.last ? '' : ',' }}
         {%- endfor %}
     ];
+
+    const OPTIONS = {{ options|raw }};
 }

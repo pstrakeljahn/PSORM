@@ -5,6 +5,7 @@ namespace PS\Core\Database\Fields;
 class DateField extends FieldBase
 {
     private $withTime = false;
+    private $datatype = FieldBase::DATE;
 
     public final function getMySQLDefinition()
     {
@@ -15,6 +16,9 @@ class DateField extends FieldBase
     public final function setWithTime(bool $withTime): self
     {
         $this->withTime = $withTime;
+        if($withTime) {
+            $this->datatype = FieldBase::DATETIME;
+        }
         return $this;
     }
 }

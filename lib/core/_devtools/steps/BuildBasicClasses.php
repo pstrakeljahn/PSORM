@@ -7,6 +7,7 @@ use PS\Core\Database\Entity;
 use PS\Core\Helper\TwigHelper;
 use Config;
 use PS\Core\_devtools\Helper\EntityHelper;
+use PS\Core\_devtools\Helper\OptionRequestBuilder;
 use ReflectionClass;
 
 class BuildBasicClasses extends BuildStep
@@ -60,8 +61,10 @@ class BuildBasicClasses extends BuildStep
             'fields' => $arrFieldNames,
             'requiredFields' => $arrRequiredFields,
             'tableName' => $instance->table,
-            'readableFields' => $arrApiReadable ,
-            'metaFields' => array_map(function($obj) {return $obj->name;}, $arrFieldsToRemove)
+            'readableFields' => $arrApiReadable,
+            'primaryKey' => array_map(function($obj) {return $obj->name;}, $instance->arrPrimaryKey),
+            'metaFields' => array_map(function($obj) {return $obj->name;}, $instance->arrMetaFields),
+            'options' => var_export(OptionRequestBuilder::getDataArray($instance), true)
         ];
     }
 
