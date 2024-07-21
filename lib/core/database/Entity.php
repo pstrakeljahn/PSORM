@@ -2,6 +2,7 @@
 
 namespace PS\Core\Database;
 
+use ObjectPeer\UserPeer;
 use PS\Core\Database\Fields\DateField;
 use PS\Core\Database\Fields\IntegerField;
 
@@ -10,6 +11,7 @@ abstract class Entity
     readonly string $table;
     public static string $primaryKey = 'ID';
     protected $fields = [];
+    private $preparedFields = null;
     public bool $withoutMeta = false;
     readonly string $entityName;
     readonly array $arrPrimaryKey;
@@ -34,27 +36,31 @@ abstract class Entity
         ];
         if (!$this->withoutMeta) {
             $this->arrMetaFields = [
-                (new DateField("_createdAt"))->setWithTime(true),
-                (new IntegerField("_createdBy"))->setLength(10)->setUnsigned(true),
-                (new DateField("_modfiedAt"))->setWithTime(true),
-                (new IntegerField("_modifiedBy"))->setLength(10)->setUnsigned(true)
+                (new DateField("_createdAt"))->setWithTime(true)->setNotNullable(false),
+                (new IntegerField("_createdBy"))->setLength(10)->setNotNullable(false)->setUnsigned(true)->setForeignKey(UserPeer::TABLE_NAME, UserPeer::ID),
+                (new DateField("_modfiedAt"))->setWithTime(true)->setNotNullable(false),
+                (new IntegerField("_modifiedBy"))->setLength(10)->setNotNullable(false)->setUnsigned(true)->setForeignKey(UserPeer::TABLE_NAME, UserPeer::ID)
             ];
         }
     }
 
     public final function _getFields(): array
     {
-        $this->fields = [
-            ...$this->arrPrimaryKey,
-            ...$this->fields
-        ];
-        if (!$this->withoutMeta) {
-            $this->fields = [
-                ...$this->fields,
-                ...$this->arrMetaFields
+        if ($this->preparedFields === null) {
+            $this->preparedFields === array();
+
+            $this->preparedFields = [
+                ...$this->arrPrimaryKey,
+                ...$this->fields
             ];
+            if (!$this->withoutMeta) {
+                $this->preparedFields = [
+                    ...$this->preparedFields,
+                    ...$this->arrMetaFields
+                ];
+            }
         }
-        return $this->fields;
+        return $this->preparedFields;
     }
 
     public final function _getField($name)
@@ -83,5 +89,18 @@ abstract class Entity
 
         $sql = 'CREATE TABLE IF NOT EXISTS `' . $this->table . '` (' . implode(', ', $fieldsSQL) . ')';
         return $sql;
+    }
+
+    public final function getFKConstraints(): array
+    {
+        $returnArray = [];
+        foreach ($this->_getFields() as $field) {
+            if (method_exists($field, 'getFKConstraint')) {
+                if ($field->getFKConstraint() !== null) {
+                    $returnArray[$field->getFKConstraint(true)] = str_replace("###TABLENAME###", $this->table, sprintf("ALTER TABLE %s %s", $this->table, $field->getFKConstraint()));
+                }
+            }
+        }
+        return $returnArray;
     }
 }

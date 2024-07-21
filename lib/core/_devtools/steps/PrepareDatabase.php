@@ -2,15 +2,16 @@
 
 namespace PS\Core\_devtools\Steps;
 
+use Config;
 use PS\Core\_devtools\Abstracts\BuildStep;
 use PS\Core\_devtools\Helper\EntityHelper;
 use PS\Core\Database\DBConnector;
 use PS\Core\Database\Entity;
-use PS\Core\Database\Fields\IntegerField;
 
 class PrepareDatabase extends BuildStep
 {
     private DBConnector $db;
+    private array $fkConstraints = [];
     protected function setStepName(): string
     {
         return 'Prepare Database';
@@ -30,7 +31,9 @@ class PrepareDatabase extends BuildStep
             } else {
                 $this->alterTable($entityInstance);
             }
+            $this->fkConstraints[$entityInstance->table] = $entityInstance->getFKConstraints();
         }
+        $this->executeFKConstraints();
         return true;
     }
 
@@ -105,5 +108,31 @@ class PrepareDatabase extends BuildStep
         }
 
         return strtolower(trim($currentDefinition)) === strtolower(trim($desiredDefinition));
+    }
+
+    private function executeFKConstraints()
+    {
+        foreach ($this->fkConstraints as $tableName => $constraint) {
+            foreach ($constraint as $fk => $query) {
+                $fkName = sprintf("fk_%s_%s", $tableName, $fk);
+                $res = $this->db->executeQuery(
+                    sprintf(
+                        "SELECT CONSTRAINT_NAME 
+                        FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS 
+                        WHERE CONSTRAINT_SCHEMA = '%s' 
+                        AND TABLE_NAME = '%s' 
+                        AND CONSTRAINT_NAME = '%s'",
+                        Config::DATABASE,
+                        $tableName,
+                        $fkName
+                    )
+                );
+                if (count($res)) {
+                    $res[0]["CONSTRAINT_NAME"] === $fkName;
+                    continue 2;
+                }
+                $this->db->executeQuery($query);
+            }
+        }
     }
 }
