@@ -19,7 +19,7 @@ class Session
         }
     }
 
-    public final static function getInstance($login): Session
+    public final static function getInstance($login = false): Session
     {
         return new self($login);
     }

@@ -34,7 +34,10 @@ class ApiHelper
             $class = "Object\\" . $objName;
             $instance = new $class;
         }
-        $instance->setPropertiesAsArray($request->parameters);
+        foreach($request->parameters as $property => $paramter) {
+            $setter = 'set' . ucfirst($property);
+            $instance->$setter($paramter);
+        }
         $instance->save();
         return $instance->asArray(true);
     }

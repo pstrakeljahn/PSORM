@@ -23,8 +23,8 @@ class RdwPeerBasic
                 $instance = new $className;
                 $instance->setPropertiesAsArray($row);
                 $results[] = $instance;
-                return $results;
             }
+            return $results;
         } else {
             return $data;
         }

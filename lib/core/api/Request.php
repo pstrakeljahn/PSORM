@@ -58,6 +58,9 @@ class Request
         if ($this->httpMethod === 'POST') {
             $parameters = [...$_POST];
         }
+        if ($this->httpMethod === 'PATCH') {
+            parse_str(file_get_contents('php://input'), $parameters);
+        }
         $this->parameters = $parameters;
         $this->file = file_get_contents('php://input');
     }

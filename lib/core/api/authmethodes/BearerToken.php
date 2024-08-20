@@ -28,19 +28,17 @@ class BearerToken implements AuthMethodeInterface
         }
     }
 
-    public function getUser(array $request): ?User
+    public function getUser(): ?User
     {
         $arrUser = UserPeer::find(
             Criteria::getInstace()
-                ->add(UserPeer::USERNAME, $request['username'])
+                ->add(UserPeer::USERNAME, $this->token['username'])
                 ->addLimit(0, 1)
         );
-        if(!count($arrUser)) {
+        if (!count($arrUser)) {
             throw new \Exception('Invalid Crentials');
         } else {
-            if(password_verify($request['password'], $arrUser[0]->getPassword())) {
-                return $arrUser[0] ;
-            }
+            return $arrUser[0];
         }
         return null;
     }
@@ -58,11 +56,28 @@ class BearerToken implements AuthMethodeInterface
         if (!isset($request->parameters['password'])) {
             throw new \Exception('Password has to be set.');
         }
-        $user = self::getUser($request->parameters);
-        if(is_null($user)) {
+        $user = self::checkPassword($request->parameters);
+        if (is_null($user)) {
             throw new \Exception('Invalid credentials');
         }
         return ['token' => self::createToken($user)];
+    }
+
+    private static function checkPassword(array $paramters): ?User
+    {
+        $arrUser = UserPeer::find(
+            Criteria::getInstace()
+                ->add(UserPeer::USERNAME, $paramters['username'])
+                ->addLimit(0, 1)
+        );
+        if (!count($arrUser)) {
+            throw new \Exception('Invalid Crentials');
+        } else {
+            if (password_verify($paramters['password'], $arrUser[0]->getPassword())) {
+                return $arrUser[0];
+            }
+        }
+        return null;
     }
 
     private static function parseToken(): ?array

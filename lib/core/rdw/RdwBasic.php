@@ -2,6 +2,8 @@
 
 namespace PS\Core\Rdw;
 
+use DateTime;
+use PS\Core\Api\Session;
 use PS\Core\Database\DBConnector;
 
 class RdwBasic
@@ -10,7 +12,7 @@ class RdwBasic
     protected $properties;
     protected $settings = [
         'isNew' => false,
-        'peerClass' => null,
+        'peerClass' => '',
         'wasNew' => false
     ];
 
@@ -31,9 +33,17 @@ class RdwBasic
 
     public final function save()
     {
+        $instance = Session::getInstance();
+        $user = $instance->getUser();
+        $date = new DateTime();
         $this->validateParameters();
         if ($this->properties['ID'] === null) {
             $this->settings['isNew'] = true;
+            $this->properties['_createdAt'] = $date->format('Y-m-d H:i:s');
+            $this->properties['_createdBy'] = $user?->getID();
+        } else {
+            $this->properties['_modfiedAt'] = $date->format('Y-m-d H:i:s');
+            $this->properties['_modifiedBy'] = $user?->getID();
         }
         $this->storeToDatabase();
         return $this;
