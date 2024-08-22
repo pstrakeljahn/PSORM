@@ -2,13 +2,14 @@
 
 namespace Entity;
 
-use ObjectPeer\UserPeer;
 use PS\Core\Database\Fields\IntegerField;
 use PS\Core\Database\Entity;
 use PS\Core\Database\Fields\StringField;
 
 class SessionEntity extends Entity
 {
+    public bool $withoutMeta = true;
+
     protected function setEntitname(): string
     {
         return 'Session';

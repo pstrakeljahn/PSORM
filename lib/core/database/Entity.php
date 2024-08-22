@@ -15,7 +15,7 @@ abstract class Entity
     public bool $withoutMeta = false;
     readonly string $entityName;
     readonly array $arrPrimaryKey;
-    readonly array $arrMetaFields;
+    public array $arrMetaFields = [];
 
     abstract public function fieldDefinition(): array;
     abstract protected function setEntitname(): string;
