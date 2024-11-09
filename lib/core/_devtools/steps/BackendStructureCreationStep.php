@@ -4,6 +4,7 @@ namespace PS\Core\_devtools\Steps;
 
 use PS\Core\_devtools\Abstracts\BuildStep;
 use Config;
+use PS\Core\Logging\Logging;
 
 class BackendStructureCreationStep extends BuildStep
 {
@@ -26,16 +27,12 @@ class BackendStructureCreationStep extends BuildStep
             'tmp' => null
         ];
 
-        $basePath = Config::BASE_PATH;
-
-        if (!self::createFolders($structure, $basePath)) {
-            return false;
-        }
-        return true;
+        return self::createFolders($structure) && self::createLogFiles();
     }
 
-    public static function createFolders(array $structure, $basePath)
+    private static function createFolders(array $structure)
     {
+        $basePath = Config::BASE_PATH;
         foreach ($structure as $folder => $subfolders) {
             $path = $basePath . $folder;
             if (!is_dir($path)) {
@@ -55,5 +52,10 @@ class BackendStructureCreationStep extends BuildStep
             }
         }
         return true;
+    }
+
+    private static function createLogFiles()
+    {
+        return Logging::generateFiles();
     }
 }

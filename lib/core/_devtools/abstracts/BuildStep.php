@@ -3,6 +3,7 @@
 namespace PS\Core\_devtools\Abstracts;
 
 use PS\Core\Helper\CliOutputHelper;
+use PS\Core\Logging\Logging;
 
 abstract class BuildStep
 {
@@ -12,8 +13,14 @@ abstract class BuildStep
 
     public final function execute(): void
     {
-        CliOutputHelper::output($this->setStepName());
-        $this->run();
+        $log = Logging::getInstance();
+        try {
+            CliOutputHelper::output($this->setStepName());
+            $this->run();
+            $log->add(Logging::LOG_TYPE_BUILD, "✅ " . $this->setStepName());
+        } catch (\Exception $e) {
+            $log->add(Logging::LOG_TYPE_BUILD, "❌ " . $this->setStepName() . ": " . $e->getMessage());
+        }
     }
 
     public final static function workThroughSteps(array $stepClasses)

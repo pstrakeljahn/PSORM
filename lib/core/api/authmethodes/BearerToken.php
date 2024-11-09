@@ -7,6 +7,7 @@ use Config;
 use Object\User;
 use ObjectPeer\UserPeer;
 use PS\Core\Database\Criteria;
+use PS\Core\Logging\Logging;
 
 class BearerToken implements AuthMethodeInterface
 {
@@ -84,7 +85,7 @@ class BearerToken implements AuthMethodeInterface
     {
         $token = self::getBearerToken();
         $request = new Request;
-        if($request->httpMethod !== 'OPTIONS') {
+        if ($request->httpMethod !== 'OPTIONS') {
             if ($token === null) {
                 throw new \Exception('Cannot get JWT Token');
             }
@@ -106,6 +107,9 @@ class BearerToken implements AuthMethodeInterface
         $payload = json_encode(
             $dataArray
         );
+
+        $log = Logging::getInstance();
+        $log->add(Logging::LOG_TYPE_AUTHORISATION, "Token created for User with ID " . $user->getID());
 
         $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
         $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));

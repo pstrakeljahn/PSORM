@@ -5,6 +5,7 @@ use PS\Core\Api\Abstracts\Endpoint;
 use PS\Core\Api\Request;
 use PS\Core\Api\Response;
 use PS\Core\Api\Session;
+use PS\Core\Logging\Logging;
 
 try {
     require '../lib/core/init.php';
@@ -76,6 +77,8 @@ try {
             ->getResponse($additionalMeta);
     }
 } catch (\Exception $e) {
+    $log = new Logging;
+    $log->add(Logging::LOG_TYPE_API, $e->getMessage());
     (new Response)
         ->setError($e->getMessage())
         ->setStatus($loggedIn ? Response::SERVER_ERROR : Response::UNAUTHORIZED)

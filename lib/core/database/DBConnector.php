@@ -5,6 +5,7 @@ namespace PS\Core\Database;
 use Config;
 use PDO;
 use PDOException;
+use PS\Core\Logging\Logging;
 
 class DBConnector
 {
@@ -39,7 +40,7 @@ class DBConnector
         return $this->pdo;
     }
 
-    public function executeQuery($sql, $params = [], $returnPDO = false)
+    public function executeQuery($sql, $params = [], $returnPDO = false, $throwException = true)
     {
         try {
             $stmt = $this->pdo->prepare($sql);
@@ -58,7 +59,11 @@ class DBConnector
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
-            throw new \Exception('Query failed: ' . $this->error);
+            $log = Logging::getInstance();
+            $log->add(Logging::LOG_TYPE_DB, 'Query failed: ' . $this->error);
+            if ($throwException) {
+                throw new \Exception('Query failed: ' . $this->error);
+            }
             return null;
         }
     }
