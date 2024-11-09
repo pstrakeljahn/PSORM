@@ -55,7 +55,7 @@ class ApiHelper
             if (!in_array($key, $peerClass::API_READABLE)) {
                 throw new \Exception(sprintf("Property '%s' is not allowed", $key));
             }
-            $criteria->add($key, $value);
+            $criteria->add($key, $value, $value === 'null' ? Criteria::IS_NULL : "=");
         }
         return $criteria;
     }

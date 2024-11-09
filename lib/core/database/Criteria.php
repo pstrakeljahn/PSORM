@@ -8,6 +8,8 @@ class Criteria
     const NOT_IN = "not in";
     const PERCENT_LIKE_PERCENT = "% like %";
     const LIKE_PERCENT = "like %";
+    const IS_NULL = "is null";
+    const IS_NOT_NULL = "is not null";
     const ASC = "ASC";
     const DESC = "DESC";
 
@@ -33,6 +35,12 @@ class Criteria
                 break;
             case self::LIKE_PERCENT:
                 $this->conditions[] = sprintf("`%s` LIKE '%s%%'", $property, $value);
+                break;
+            case self::IS_NULL:
+                $this->conditions[] = sprintf("`%s` IS NULL", $property);
+                break;
+            case self::IS_NOT_NULL:
+                $this->conditions[] = sprintf("`%s` IS NOT NULL", $property);
                 break;
             default:
                 $this->conditions[] = sprintf("`%s` %s '%s'", $property, $operator, $value);
