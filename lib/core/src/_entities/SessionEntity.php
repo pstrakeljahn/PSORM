@@ -31,9 +31,9 @@ class SessionEntity extends Entity
             ->setNotNullable(false)
             ->setRequired(true)
             ->setForeignKey('users', 'ID');
-        $sessionToken = (new StringField('sessionToken'))
+        $sessionToken = (new StringField('refreshToken'))
             ->setNotNullable(false)
-            ->setLength(255);
+            ->setLength(500);
 
         return [
             $userID,

@@ -13,7 +13,7 @@ class Session
     public function __construct($login)
     {
         $this->isServiceInstance = defined('SERVICE');
-        if($this->isServiceInstance) {
+        if ($this->isServiceInstance) {
             $login = true;
         }
         foreach (include 'authmethodes/Methodes.php' as $className) {
@@ -31,7 +31,7 @@ class Session
 
     public final function getUser()
     {
-        if($this->isServiceInstance) {
+        if ($this->isServiceInstance) {
             return null;
         }
         return $this->authInstance->getUser();
@@ -39,7 +39,7 @@ class Session
 
     public final function getLoggedIn(): bool
     {
-        if($this->isServiceInstance) {
+        if ($this->isServiceInstance) {
             return true;
         }
         return $this->authInstance->getLoggedIn();
@@ -51,5 +51,15 @@ class Session
             throw new \Exception('Use POST method to login');
         }
         return $this->authInstance->login($request);
+    }
+
+    public final function logout(Request $request)
+    {
+        // Delete RefreshToken!
+    }
+
+    public final function refresh(Request $request)
+    {
+        // Refresh Token and generate new RefreshToken!
     }
 }

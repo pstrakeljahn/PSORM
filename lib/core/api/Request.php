@@ -7,10 +7,12 @@ use Config;
 class Request
 {
     const TYPE_LOGIN = 'login';
+    const TYPE_LOGOUT = 'logout';
+    const TYPE_REFRESH = 'refresh';
     const TYPE_OBJ = 'obj';
     const TYPE_CORE = 'core';
     const TYPE_MOD = 'mod';
-    const ALLOWED_TYPES = [self::TYPE_OBJ, self::TYPE_LOGIN, self::TYPE_MOD, self::TYPE_CORE];
+    const ALLOWED_TYPES = [self::TYPE_OBJ, self::TYPE_LOGIN, self::TYPE_LOGOUT, self::TYPE_REFRESH, self::TYPE_MOD, self::TYPE_CORE];
 
     public readonly string $requestUri;
     public readonly string $httpMethod;

@@ -15,7 +15,7 @@ try {
 
     $loggedIn = $sessionInstance->getLoggedIn();
 
-    if (!$loggedIn && $request->segments[$request->apiIndex + 2] !== Request::TYPE_LOGIN && $request->httpMethod !== 'OPTIONS') {
+    if (!$loggedIn && !in_array($request->segments[$request->apiIndex + 2], [Request::TYPE_LOGIN, Request::TYPE_REFRESH]) && $request->httpMethod !== 'OPTIONS') {
         throw new \Exception('Not logged in');
     }
     $error = null;
@@ -64,6 +64,9 @@ try {
                 break;
             case Request::TYPE_LOGIN:
                 $data = $sessionInstance->login($request);
+                break;
+            case Request::TYPE_LOGOUT:
+                $data = $sessionInstance->logout($request);
                 break;
             case Request::TYPE_MOD:
             case Request::TYPE_CORE:

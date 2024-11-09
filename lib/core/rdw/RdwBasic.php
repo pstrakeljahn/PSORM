@@ -33,17 +33,22 @@ class RdwBasic
 
     public final function save()
     {
-        $instance = Session::getInstance();
-        $user = $instance->getUser();
+        $user = null;
+        try {
+            $instance = Session::getInstance();
+            $user = $instance->getUser();
+        } catch (\Exception $e) {
+            $userID = null;
+        }
         $date = new DateTime();
         $this->validateParameters();
         if ($this->properties['ID'] === null) {
             $this->settings['isNew'] = true;
             $this->properties['_createdAt'] = $date->format('Y-m-d H:i:s');
-            $this->properties['_createdBy'] = $user?->getID();
+            $this->properties['_createdBy'] = $user?->getID() ?? $userID;
         } else {
             $this->properties['_modfiedAt'] = $date->format('Y-m-d H:i:s');
-            $this->properties['_modifiedBy'] = $user?->getID();
+            $this->properties['_modifiedBy'] = $user?->getID() ?? $userID;
         }
         $this->storeToDatabase();
         return $this;

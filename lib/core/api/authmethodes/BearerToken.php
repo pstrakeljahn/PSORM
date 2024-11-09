@@ -4,7 +4,9 @@ namespace PS\Core\Api\Authmethodes;
 
 use PS\Core\Api\Request;
 use Config;
+use Object\Session;
 use Object\User;
+use ObjectPeer\SessionPeer;
 use ObjectPeer\UserPeer;
 use PS\Core\Database\Criteria;
 use PS\Core\Logging\Logging;
@@ -61,7 +63,21 @@ class BearerToken implements AuthMethodeInterface
         if (is_null($user)) {
             throw new \Exception('Invalid credentials');
         }
-        return ['token' => self::createToken($user)];
+        $token = self::createToken($user);
+        $refereshToken = self::createRefreshToken($user);
+        $this->createSession($refereshToken, $user);
+        return ['token' => $token, 'refreshToken' => $refereshToken];
+    }
+
+    private function createSession(string $refereshToken, User $user)
+    {
+        $arrSession = SessionPeer::find(Criteria::getInstace()->add(SessionPeer::USERID, $user->getID()));
+        if (count($arrSession)) {
+            $session = $arrSession[0];
+        } else {
+            $session = new Session;
+        }
+        $session->setUserid($user->getID())->setRefreshtoken($refereshToken)->save();
     }
 
     private static function checkPassword(array $paramters): ?User
@@ -96,7 +112,6 @@ class BearerToken implements AuthMethodeInterface
 
     public static function createToken(User $user): string
     {
-        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
         $dataArray = self::TOKEN_BODY;
         $dataArray['UserID'] = $user->getID();
         $dataArray['username'] = $user->getUsername();
@@ -104,12 +119,29 @@ class BearerToken implements AuthMethodeInterface
         $dataArray['lastname'] = $user->getLastname();
         $dataArray['mail'] = $user->getMail();
         $dataArray['exp'] = time() + Config::TOKEN_EXPIRED_IN_S;
+
+        return self::generateToken($dataArray);
+    }
+
+    private static function createRefreshToken(User $user)
+    {
+        $dataArray = [
+            'UserID' => $user->getId(),
+            'timestamp' => time()
+        ];
+
+        return self::generateToken($dataArray);
+    }
+
+    private static function generateToken(array $dataArray)
+    {
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
         $payload = json_encode(
             $dataArray
         );
 
         $log = Logging::getInstance();
-        $log->add(Logging::LOG_TYPE_AUTHORISATION, "Token created for User with ID " . $user->getID());
+        $log->add(Logging::LOG_TYPE_AUTHORISATION, "Token created for User with ID " . $dataArray['UserID']);
 
         $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
         $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
