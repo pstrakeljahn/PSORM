@@ -35,8 +35,21 @@ try {
                         }
                     } else {
                         if ($request->httpMethod === 'GET') {
-                            $data = ApiHelper::findObject($objectName);
-                            $additionalMeta['count'] = count($data);
+                            $pageSize = ApiHelper::DEFAULT_PAGESIZE;
+                            $page = 1;
+                            if (isset($request->parameters['_pageSize'])) {
+                                $pageSize = (int)$request->parameters['_pageSize'];
+                            }
+                            if (isset($request->parameters['_page'])) {
+                                $page = (int)$request->parameters['_page'];
+                            }
+                            if ($pageSize === -1) {
+                                $page = 1;
+                            }
+                            $additionalMeta['page'] = $page;
+                            $additionalMeta['pageSize'] = $pageSize;
+                            $data = ApiHelper::findObject($objectName, null, $page, $pageSize);
+                            $additionalMeta['totalCount'] = count($data);
                         } else if ($request->httpMethod === 'POST') {
                             $data = ApiHelper::saveObject($objectName);
                             $status = Response::CREATED;

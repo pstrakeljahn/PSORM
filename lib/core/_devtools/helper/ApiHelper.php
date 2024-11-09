@@ -7,7 +7,8 @@ use PS\Core\Database\Criteria;
 
 class ApiHelper
 {
-    public static final function findObject(string $objName, $id = null): ?array
+    public const DEFAULT_PAGESIZE = 25;
+    public static final function findObject(string $objName, $id = null, $page = null, $pageSize = null): ?array
     {
         self::checkEntityAvailability($objName);
         $returnArray = [];
@@ -16,7 +17,7 @@ class ApiHelper
             $instance = $peerClass::findById($id);
             $returnArray = $instance?->asArray(true);
         } else {
-            $criteria = self::buildCriteria($peerClass);
+            $criteria = self::buildCriteria($peerClass, $page, $pageSize);
             $arrInstance = $peerClass::find($criteria);
             foreach ($arrInstance as $instance) {
                 $returnArray[] = $instance->asArray(true);
@@ -44,19 +45,23 @@ class ApiHelper
         return $instance->asArray(true);
     }
 
-    private static function buildCriteria($peerClass): Criteria
+    private static function buildCriteria($peerClass, $page, $pageSize): Criteria
     {
         $request = Request::getInstance();
         $criteria = Criteria::getInstace();
-        if (!count($request->parameters)) {
-            return $criteria;
-        }
         foreach ($request->parameters as $key => $value) {
-            if (!in_array($key, $peerClass::API_READABLE)) {
+            if (!in_array($key, [...$peerClass::API_READABLE, "_page", "_pageSize"])) {
                 throw new \Exception(sprintf("Property '%s' is not allowed", $key));
             }
-            $criteria->add($key, $value, $value === 'null' ? Criteria::IS_NULL : "=");
+            if (!in_array($key, ["_pageSize", "_page"])) {
+                $criteria->add($key, $value, $value === 'null' ? Criteria::IS_NULL : "=");
+            }
         }
+
+        if ($page !== null && $pageSize !== -1) {
+            $criteria->addLimit((($page - 1) * $pageSize) * $pageSize, $pageSize);
+        }
+
         return $criteria;
     }
 

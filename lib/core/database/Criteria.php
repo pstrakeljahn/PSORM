@@ -69,14 +69,20 @@ class Criteria
 
     public final function getConditions(): string
     {
-        if (!count($this->conditions) && !count($this->orCriteria)) return '';
-        $sql = implode(" AND ", $this->conditions);
+        if (!count($this->conditions) && !count($this->limit ?? []) && !count($this->orCriteria)) return '';
+        $sql = '';
+        $hasWhereCondition = false;
+        if (!empty($this->orCriteria)) {
+            $sql = implode(" AND ", $this->conditions);
+            $hasWhereCondition = true;
+        }
         if (!empty($this->orCriteria)) {
             $orConditions = [];
             foreach ($this->orCriteria as $orCriteria) {
                 $orConditions[] = "(" . $orCriteria->getConditions() . ")";
             }
             $sql .= " OR " . implode(" OR ", $orConditions);
+            $hasWhereCondition = true;
         }
 
         if (!empty($this->orderBy)) {
@@ -86,6 +92,6 @@ class Criteria
         if (!is_null($this->limit)) {
             $sql .= " LIMIT " . $this->limit[0] . ", " . $this->limit[1];
         }
-        return "WHERE " . $sql;
+        return $hasWhereCondition ? "WHERE " : "" . $sql;
     }
 }

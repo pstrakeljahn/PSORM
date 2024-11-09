@@ -17,7 +17,7 @@ class RdwPeerBasic
             return [];
         }
         $results = [];
-        if(!$asArray) {
+        if (!$asArray) {
             $className = "Object\\" . str_replace("Peer", "", explode("\\", $calledClass)[1]);
             foreach ($data as $row) {
                 $instance = new $className;
@@ -40,7 +40,7 @@ class RdwPeerBasic
         if (!count($data)) {
             return null;
         } else {
-            if(!$asArray) {
+            if (!$asArray) {
                 $className = "Object\\" . str_replace("Peer", "", explode("\\", $callesClass)[1]);
                 $instance = (new $className);
                 $instance->setPropertiesAsArray($data[0]);

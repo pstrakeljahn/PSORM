@@ -140,7 +140,7 @@ class RdwBasic
     {
         $returnArray = [];
         foreach ($this->properties as $key => $value) {
-            if(!in_array($key, $this->settings['peerClass']::API_READABLE) && $forApi) {
+            if (!in_array($key, $this->settings['peerClass']::API_READABLE) && $forApi) {
                 continue;
             }
             $returnArray[$key] = $value;
