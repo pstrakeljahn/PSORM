@@ -20,6 +20,11 @@ class SessionEntity extends Entity
         return 'sessions';
     }
 
+    protected function apiDisabled(): bool
+    {
+        return true;
+    }
+
     public function fieldDefinition(): array
     {
         $userID = (new IntegerField('UserID'))

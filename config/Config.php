@@ -4,12 +4,12 @@ class Config
 {
     // Globals
     const DEBUG = true;
-    const ALLOWED_ORIGINS = ['localhost'];
-    
+    const ALLOWED_ORIGINS = ['localhost', 'http://localhost:8100'];
+
     // Login Method - If not specified autochoosen
     const LOGIN_METHOD = PS\Core\Api\Authmethodes\BearerToken::class;
     const TOKEN_EXPIRED_IN_S = 3600;
-    
+
     // Databaseinformation
     const HOST = 'localhost';
     const PORT = '3306';
@@ -17,7 +17,7 @@ class Config
     const PASSWORD = 'qwer1234';
     const DATABASE = 'test';
     const CHARSET = 'utf8mb4';
-    
+
     // Pathes
     const BASE_PATH = __DIR__ . '/../';
     const TEMP_FOLDER = __DIR__ . '/../temp/';
@@ -28,5 +28,4 @@ class Config
         ObjectPeer\UserPeer::USERNAME => 'admin',
         ObjectPeer\UserPeer::PASSWORD => 'D<2;x3obA+<i5'
     ];
-
 }

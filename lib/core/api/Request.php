@@ -6,9 +6,11 @@ use Config;
 
 class Request
 {
-    const TYPE_OBJ = 'obj';
     const TYPE_LOGIN = 'login';
-    const ALLOWED_TYPES = [self::TYPE_OBJ, self::TYPE_LOGIN];
+    const TYPE_OBJ = 'obj';
+    const TYPE_CORE = 'core';
+    const TYPE_MOD = 'mod';
+    const ALLOWED_TYPES = [self::TYPE_OBJ, self::TYPE_LOGIN, self::TYPE_MOD, self::TYPE_CORE];
 
     public readonly string $requestUri;
     public readonly string $httpMethod;
@@ -38,7 +40,7 @@ class Request
         $path = trim($urlParts['path'], '/');
         $this->segments = explode('/', $path);
         $this->apiIndex = array_search('api', $this->segments);
-        if ($this->apiIndex === false) {
+        if ($this->apiIndex === false || $this->apiIndex === 0) {
             throw new \Exception('Access API!');
         }
         $requestType = $this->segments[$this->apiIndex + 2];

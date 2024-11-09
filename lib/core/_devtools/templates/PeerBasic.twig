@@ -4,6 +4,7 @@ use PS\Core\Rdw\RdwPeerBasic;
 
 class {{ className }}PeerBasic extends RdwPeerBasic {
     const TABLE_NAME = '{{ tableName }}';
+    const API_DISABLED = {% if apiDisabled %} true {% else %} false {% endif %};
     {%- for field in primaryKey %}
     const {{ field|upper }} = '{{ field }}';
     {%- endfor %}

@@ -9,12 +9,13 @@ use PS\Core\Database\Fields\IntegerField;
 abstract class Entity
 {
     readonly string $table;
-    public static string $primaryKey = 'ID';
-    protected $fields = [];
-    private $preparedFields = null;
-    public bool $withoutMeta = false;
     readonly string $entityName;
     readonly array $arrPrimaryKey;
+    readonly bool $apiDisabled;
+    private $preparedFields = null;
+    protected $fields = [];
+    public static string $primaryKey = 'ID';
+    public bool $withoutMeta = false;
     public array $arrMetaFields = [];
 
     abstract public function fieldDefinition(): array;
@@ -26,11 +27,17 @@ abstract class Entity
         $this->run();
     }
 
+    protected function apiDisabled(): bool
+    {
+        return false;
+    }
+
     public final function run(): void
     {
         $this->entityName = ucfirst($this->setEntitname());
         $this->fields = $this->fieldDefinition();
         $this->table = $this->setTabelName();
+        $this->apiDisabled = $this->apiDisabled();
         $this->arrPrimaryKey = [
             (new IntegerField(static::$primaryKey))->setLength(10)->setRequired(true)->setUnsigned(true)->setAutoIncrement(true),
         ];

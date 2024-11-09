@@ -9,15 +9,16 @@ class ApiHelper
 {
     public static final function findObject(string $objName, $id = null): ?array
     {
+        self::checkEntityAvailability($objName);
         $returnArray = [];
         $peerClass = "ObjectPeer\\" . $objName . "Peer";
-        if(!is_null($id)) {
-            $instance = $peerClass::findById($id);    
+        if (!is_null($id)) {
+            $instance = $peerClass::findById($id);
             $returnArray = $instance?->asArray(true);
         } else {
             $criteria = self::buildCriteria($peerClass);
             $arrInstance = $peerClass::find($criteria);
-            foreach($arrInstance as $instance) {
+            foreach ($arrInstance as $instance) {
                 $returnArray[] = $instance->asArray(true);
             }
         }
@@ -26,15 +27,16 @@ class ApiHelper
 
     public static final function saveObject(string $objName, $id = null)
     {
+        self::checkEntityAvailability($objName);
         $request = Request::getInstance();
-        if(!is_null($id)) {
+        if (!is_null($id)) {
             $peerClass = "ObjectPeer\\" . $objName . "Peer";
             $instance = $peerClass::findById($id);
         } else {
             $class = "Object\\" . $objName;
             $instance = new $class;
         }
-        foreach($request->parameters as $property => $paramter) {
+        foreach ($request->parameters as $property => $paramter) {
             $setter = 'set' . ucfirst($property);
             $instance->$setter($paramter);
         }
@@ -46,15 +48,23 @@ class ApiHelper
     {
         $request = Request::getInstance();
         $criteria = Criteria::getInstace();
-        if(!count($request->parameters)) {
+        if (!count($request->parameters)) {
             return $criteria;
         }
-        foreach($request->parameters as $key => $value) {
-            if(!in_array($key, $peerClass::API_READABLE)) {
+        foreach ($request->parameters as $key => $value) {
+            if (!in_array($key, $peerClass::API_READABLE)) {
                 throw new \Exception(sprintf("Property '%s' is not allowed", $key));
             }
             $criteria->add($key, $value);
         }
         return $criteria;
+    }
+
+    private static function checkEntityAvailability(string $objName): void
+    {
+        $peerClass = "ObjectPeer\\" . $objName . "Peer";
+        if (!class_exists($peerClass) || $peerClass::API_DISABLED) {
+            throw new \Exception("Entity '$objName' does not exist.");
+        }
     }
 }

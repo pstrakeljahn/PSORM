@@ -62,6 +62,7 @@ class BuildBasicClasses extends BuildStep
             'requiredFields' => $arrRequiredFields,
             'tableName' => $instance->table,
             'readableFields' => $arrApiReadable,
+            'apiDisabled' => $instance->apiDisabled,
             'primaryKey' => array_map(function($obj) {return $obj->name;}, $instance->arrPrimaryKey),
             'metaFields' => array_map(function($obj) {return $obj->name;}, $instance->arrMetaFields),
             'options' => var_export(OptionRequestBuilder::getDataArray($instance), true)

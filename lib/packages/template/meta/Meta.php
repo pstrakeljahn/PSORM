@@ -1,6 +1,6 @@
 <?php
 
-namespace PS\Package\Gans\Meta;
+namespace PS\Package\Template\Meta;
 
 use PS\Core\Abstracts\MetaDto;
 use PS\Core\Abstracts\MetaInterface;

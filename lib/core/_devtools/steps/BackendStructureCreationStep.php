@@ -20,7 +20,7 @@ class BackendStructureCreationStep extends BuildStep
     public function run(): bool
     {
         $structure = [
-            'build' => ['peerBasic', 'basic'],
+            'build' => ['customEndpoints', 'peerBasic', 'basic'],
             'logs' => null,
             'files' => null,
             'tmp' => null

@@ -83,10 +83,14 @@ class BearerToken implements AuthMethodeInterface
     private static function parseToken(): ?array
     {
         $token = self::getBearerToken();
-        if ($token === null) {
-            throw new \Exception('Cannot get JWT Token');
+        $request = new Request;
+        if($request->httpMethod !== 'OPTIONS') {
+            if ($token === null) {
+                throw new \Exception('Cannot get JWT Token');
+            }
+            return self::validateToken($token);
         }
-        return self::validateToken($token);
+        return null;
     }
 
     public static function createToken(User $user): string

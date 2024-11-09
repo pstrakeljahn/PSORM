@@ -1,6 +1,7 @@
 <?php
 
 use PS\Core\_devtools\Helper\ApiHelper;
+use PS\Core\Api\Abstracts\Endpoint;
 use PS\Core\Api\Request;
 use PS\Core\Api\Response;
 use PS\Core\Api\Session;
@@ -13,11 +14,12 @@ try {
 
     $loggedIn = $sessionInstance->getLoggedIn();
 
-    if (!$loggedIn && $request->segments[$request->apiIndex + 2] !== Request::TYPE_LOGIN) {
+    if (!$loggedIn && $request->segments[$request->apiIndex + 2] !== Request::TYPE_LOGIN && $request->httpMethod !== 'OPTIONS') {
         throw new \Exception('Not logged in');
     }
     $error = null;
     $status = null;
+    $data = null;
     $additionalMeta = [];
     if (count($request->segments) >= $request->apiIndex + 3) {
         switch ($request->segments[$request->apiIndex + 2]) {
@@ -48,6 +50,10 @@ try {
                 break;
             case Request::TYPE_LOGIN:
                 $data = $sessionInstance->login($request);
+                break;
+            case Request::TYPE_MOD:
+            case Request::TYPE_CORE:
+                $data = Endpoint::getEndpointData();
                 break;
         }
         (new Response)
