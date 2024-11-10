@@ -45,21 +45,18 @@ class Session
         return $this->authInstance->getLoggedIn();
     }
 
-    public final function login(Request $request): ?array
+    public final function login(): ?array
     {
-        if ($request->httpMethod !== 'POST') {
-            throw new \Exception('Use POST method to login');
-        }
-        return $this->authInstance->login($request);
+        return $this->authInstance->login();
     }
 
-    public final function logout(Request $request)
+    public final function logout()
     {
-        // Delete RefreshToken!
+        return $this->authInstance->logout();
     }
 
-    public final function refresh(Request $request)
+    public final function refresh()
     {
-        // Refresh Token and generate new RefreshToken!
+        return $this->authInstance->refresh();
     }
 }

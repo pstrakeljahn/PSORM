@@ -63,10 +63,13 @@ try {
                 }
                 break;
             case Request::TYPE_LOGIN:
-                $data = $sessionInstance->login($request);
+                $data = $sessionInstance->login();
+                break;
+            case Request::TYPE_REFRESH:
+                $data = $sessionInstance->refresh();
                 break;
             case Request::TYPE_LOGOUT:
-                $data = $sessionInstance->logout($request);
+                $data = $sessionInstance->logout();
                 break;
             case Request::TYPE_MOD:
             case Request::TYPE_CORE:

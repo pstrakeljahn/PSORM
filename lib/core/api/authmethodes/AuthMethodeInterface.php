@@ -3,11 +3,12 @@
 namespace PS\Core\Api\Authmethodes;
 
 use Object\User;
-use PS\Core\Api\Request;
 
 interface AuthMethodeInterface
 {
     public function getUser(): ?User;
     public function getLoggedIn(): bool;
-    public function login(Request $request): ?array;
+    public function login(): ?array;
+    public function logout(): ?array;
+    public function refresh(): ?array;
 }

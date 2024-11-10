@@ -23,11 +23,13 @@ class BearerToken implements AuthMethodeInterface
     ];
 
     private readonly ?array $token;
+    private Request $request;
 
     public function __construct($login = false)
     {
+        $this->request = Request::getInstance();
         if (!$login) {
-            $this->token = self::parseToken();
+            $this->token = self::parseToken($this->request);
         }
     }
 
@@ -51,15 +53,18 @@ class BearerToken implements AuthMethodeInterface
         return isset($this->token['UserID']);
     }
 
-    public function login(Request $request): ?array
+    public function login(): ?array
     {
-        if (!isset($request->parameters['username'])) {
+        if ($this->request->httpMethod !== 'POST') {
+            throw new \Exception('Use POST method to login');
+        }
+        if (!isset($this->request->parameters['username'])) {
             throw new \Exception('Username has to be set.');
         }
-        if (!isset($request->parameters['password'])) {
+        if (!isset($this->request->parameters['password'])) {
             throw new \Exception('Password has to be set.');
         }
-        $user = self::checkPassword($request->parameters);
+        $user = self::checkPassword($this->request->parameters);
         if (is_null($user)) {
             throw new \Exception('Invalid credentials');
         }
@@ -97,10 +102,9 @@ class BearerToken implements AuthMethodeInterface
         return null;
     }
 
-    private static function parseToken(): ?array
+    private static function parseToken(Request $request): ?array
     {
         $token = self::getBearerToken();
-        $request = new Request;
         if ($request->httpMethod !== 'OPTIONS') {
             if ($token === null) {
                 throw new \Exception('Cannot get JWT Token');
@@ -224,5 +228,47 @@ class BearerToken implements AuthMethodeInterface
             return $matches[1];
         }
         return null;
+    }
+
+    public function logout(): ?array
+    {
+        if ($this->request->httpMethod !== 'POST') {
+            throw new \Exception('Use POST method to logout');
+        }
+        $arrUserSession = SessionPeer::find(
+            Criteria::getInstace()
+                ->add(SessionPeer::USERID, $this->token['UserID'])
+        );
+
+        foreach ($arrUserSession as $session) {
+            $session->delete();
+        }
+        return [];
+    }
+
+    public function refresh(): ?array
+    {
+        if (!in_array($this->request->httpMethod, ['POST', 'OPTIONS'])) {
+            throw new \Exception('Use POST method to refresh');
+        }
+        if (!isset($this->request->parameters['refreshToken'])) {
+            throw new \Exception('RefreshToken is missing.');
+        }
+        $arrUserSession = SessionPeer::find(
+            Criteria::getInstace()
+                ->add(SessionPeer::USERID, $this->token['UserID'])
+                ->add(SessionPeer::REFRESHTOKEN, $this->request->parameters['refreshToken'])
+        );
+
+        if (!count($arrUserSession)) {
+            throw new \Exception('No active session found.');
+        }
+
+        $user = $this->getUser();
+        $newToken = self::createToken($user);
+        $newRefreshtoken = self::createRefreshToken($user);
+        $this->createSession($newRefreshtoken, $user);
+
+        return ['token' => $newToken, 'refreshToken' => $newRefreshtoken];
     }
 }
