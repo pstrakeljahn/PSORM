@@ -29,7 +29,7 @@ class EnvironmentHelper
 
     public static function createEnvFile(): bool
     {
-        $exampleFile = Config::BASE_PATH . 'lib/core/_devtools/templates/.env';
+        $exampleFile = Config::BASE_PATH . 'lib/core/_devtools/templates/.env.template';
 
         if (!file_exists(self::ENV_PATH)) {
             if (file_exists($exampleFile)) {
