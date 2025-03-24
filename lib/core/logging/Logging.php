@@ -14,6 +14,7 @@ class Logging
     const LOG_TYPE_BUILD = 'build';
     const LOG_TYPE_DB = 'db';
     const LOG_TYPE_AUTHORISATION = 'auth';
+    const LOG_TYPE_MAIL = 'mail';
 
     private const ARRAY_LOG_TYPES = [
         self::LOG_TYPE_API,
@@ -21,7 +22,8 @@ class Logging
         self::LOG_TYPE_EXTERNAL,
         self::LOG_TYPE_BUILD,
         self::LOG_TYPE_DB,
-        self::LOG_TYPE_AUTHORISATION
+        self::LOG_TYPE_AUTHORISATION,
+        self::LOG_TYPE_MAIL,
     ];
 
     const LOG_PATH = Config::BASE_PATH . '/logs/';

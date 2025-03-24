@@ -22,7 +22,7 @@ class BackendStructureCreationStep extends BuildStep
     {
         $structure = [
             'build' => ['customEndpoints', 'peerBasic', 'basic'],
-            'logs' => null,
+            'logs' => ['mails'],
             'files' => null,
             'tmp' => null
         ];

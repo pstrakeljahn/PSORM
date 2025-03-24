@@ -14,6 +14,7 @@ class Config
     const BASE_PATH = __DIR__ . '/../';
     const TEMP_FOLDER = __DIR__ . '/../temp/';
     const FILES_FOLDER = __DIR__ . '/../files/';
+    const LOG_FOLDER = __DIR__ . '/../logs/';
 
     // Initials data
     const ADMIN_USER = [

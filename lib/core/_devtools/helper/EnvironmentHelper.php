@@ -19,6 +19,14 @@ class EnvironmentHelper
         "DB_CHARSET"
     ];
 
+    private const ADDITIONAL_KEYS = [
+        "MAIL_HOST",
+        "MAIL_USER",
+        "MAIL_PASS",
+        "MAIL_PORT",
+        "MAIL_FROM_NAME"
+    ];
+
     public static function createEnvFile(): bool
     {
         $exampleFile = Config::BASE_PATH . 'lib/core/_devtools/templates/.env';
@@ -48,6 +56,11 @@ class EnvironmentHelper
                 $missingValues[] = $key;
             } elseif ($_ENV[$key] === "") {
                 $missingValues[] = $key;
+            }
+        }
+        foreach (self::ADDITIONAL_KEYS as $key) {
+            if (!isset($_ENV[$key])) {
+                $missingKeys[] = $key;
             }
         }
         if (!empty($missingKeys)) {
