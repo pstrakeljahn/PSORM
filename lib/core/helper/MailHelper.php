@@ -1,6 +1,6 @@
 <?php
 
-namespace PS\Core\_devtools\Helper;
+namespace PS\Core\Helper;
 
 use Config;
 use DateTime;
@@ -39,10 +39,8 @@ class MailHelper
         return [
             "isSMTP" => true,
             "host" => $mail->Host,
-            "sMTPAuth" => $mail->SMTPAuth,
-            "username" => $mail->Username,
-            "password" => $mail->Password,
-            "sMTPSecure" => $mail->SMTPSecure,
+            "smtpAuth" => $mail->SMTPAuth,
+            "smtpSecure" => $mail->SMTPSecure,
             "port" => $mail->Port,
             "setFrom" => [
                 "mail" => $_ENV['MAIL_USER'],

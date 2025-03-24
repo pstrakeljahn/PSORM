@@ -3,7 +3,7 @@
 namespace PS\Core\Mail;
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PS\Core\_devtools\Helper\MailHelper;
+use PS\Core\Helper\MailHelper;
 use PS\Core\Logging\Logging;
 
 /**
