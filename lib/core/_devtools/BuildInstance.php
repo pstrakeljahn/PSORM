@@ -3,6 +3,7 @@
 namespace PS\Core\_devtools;
 
 use PS\Core\_devtools\Abstracts\BuildStep;
+use PS\Core\_devtools\Helper\EnvironmentHelper;
 use PS\Core\_devtools\Steps\BackendStructureCreationStep;
 use PS\Core\_devtools\Steps\BuildBasicClasses;
 use PS\Core\_devtools\Steps\GetEndpoints;
@@ -28,6 +29,33 @@ class BuildInstance
 
     public final static function run()
     {
-        BuildStep::workThroughSteps(self::steps());
+        self::printPreambel();
+        if (EnvironmentHelper::createEnvFile() && EnvironmentHelper::validateEnv() && EnvironmentHelper::checkDbConnectivity()) {
+            BuildStep::workThroughSteps(self::steps());
+        }
+    }
+
+    private static function printPreambel(): void
+    {
+        $text = 'Building Instance';
+        $borderLength = 64;
+        $borderSymbol = '*';
+        $textLength = strlen($text);
+
+        if ($textLength > ($borderLength - 4)) {
+            $text = substr($text, 0, $borderLength - 4);
+            $textLength = strlen($text);
+        }
+
+        $padding = ($borderLength - 2 - $textLength) / 2;
+        $leftPadding = floor($padding);
+        $rightPadding = ceil($padding);
+
+        $border = str_repeat($borderSymbol, $borderLength);
+        $textLine = $borderSymbol . str_repeat(' ', $leftPadding) . $text . str_repeat(' ', $rightPadding) . $borderSymbol;
+
+        echo $border . PHP_EOL;
+        echo $textLine . PHP_EOL;
+        echo $border . PHP_EOL;
     }
 }

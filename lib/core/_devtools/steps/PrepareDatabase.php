@@ -24,6 +24,7 @@ class PrepareDatabase extends BuildStep
 
     public function run(): bool
     {
+        $this->checkDatabase();
         $this->db = new DBConnector();
         foreach (EntityHelper::loadEntityClasses() as $entityInstance) {
             if (!$this->tableExists($entityInstance->table)) {
@@ -35,6 +36,15 @@ class PrepareDatabase extends BuildStep
         }
         $this->executeFKConstraints();
         return true;
+    }
+
+    private function checkDatabase()
+    {
+        $db = new DBConnector(true);
+        $res = $db->executeQuery("SHOW DATABASES LIKE '" . $_ENV["DB_NAME"] . "'");
+        if (!count($res)) {
+            $db->executeQuery("CREATE DATABASE `" . $_ENV["DB_NAME"] . "` CHARACTER SET " . $_ENV["DB_CHARSET"] . " COLLATE " . $_ENV["DB_CHARSET"] . "_general_ci");
+        }
     }
 
     private function tableExists(string $tableName): bool
@@ -122,7 +132,7 @@ class PrepareDatabase extends BuildStep
                         WHERE CONSTRAINT_SCHEMA = '%s' 
                         AND TABLE_NAME = '%s' 
                         AND CONSTRAINT_NAME = '%s'",
-                        Config::DATABASE,
+                        $_ENV["DB_NAME"],
                         $tableName,
                         $fkName
                     )

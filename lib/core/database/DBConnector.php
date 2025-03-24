@@ -9,17 +9,28 @@ use PS\Core\Logging\Logging;
 
 class DBConnector
 {
-    private string $host = Config::HOST;
-    private string $db_name = Config::DATABASE;
-    private string $username = Config::USERNAME;
-    private string $password = Config::PASSWORD;
-    private string $charset = Config::CHARSET;
+    private string $host;
+    private string $db_name;
+    private string $username;
+    private string $password;
+    private string $charset;
+    private string $port;
     private PDO $pdo;
     private string $error;
 
-    public function __construct()
+    public function __construct($withoutDbSelection = false)
     {
-        $dsn = "mysql:host=$this->host;dbname=$this->db_name;charset=$this->charset";
+        $this->host = $_ENV["DB_HOST"];
+        $this->db_name = $_ENV["DB_NAME"];
+        $this->username = $_ENV["DB_USER"];
+        $this->password = $_ENV["DB_PASS"];
+        $this->charset = $_ENV["DB_CHARSET"];
+        $this->port = $_ENV["DB_PORT"];
+
+        $dsn = "mysql:host=$this->host;charset=$this->charset;port=$this->port;";
+        if (!$withoutDbSelection) {
+            $dsn .= "dbname=$this->db_name;";
+        }
         $options = [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

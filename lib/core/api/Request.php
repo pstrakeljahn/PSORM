@@ -26,8 +26,8 @@ class Request
 
     public function __construct()
     {
-        $this->requestUri = $_SERVER['REQUEST_URI'];
-        $this->httpMethod = $_SERVER['REQUEST_METHOD'];
+        $this->requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        $this->httpMethod = $_SERVER['REQUEST_METHOD'] ?? '';
         $this->origin = $_SERVER['HTTP_ORIGIN'] ?? null;
         if (!is_null($this->origin) && !in_array($this->origin, Config::ALLOWED_ORIGINS)) {
             throw new \Exception('Origin is not allowed');

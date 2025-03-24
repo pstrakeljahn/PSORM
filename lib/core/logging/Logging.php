@@ -3,6 +3,7 @@
 namespace PS\Core\Logging;
 
 use Config;
+use PS\Core\Helper\CliOutputHelper;
 
 class Logging
 {
@@ -35,12 +36,7 @@ class Logging
      */
     public function add(string $type, string $message, bool $echo = false): void
     {
-        $date = date('Y-m-d H:i:s', time());
-        $logEntry = '[' . $date . '] : ' . $message . "\r\n";
-        file_put_contents(self::LOG_PATH . $type . '.log', $logEntry, FILE_APPEND);
-        if ($echo) {
-            echo $logEntry;
-        }
+        file_put_contents(self::LOG_PATH . $type . '.log', CliOutputHelper::output($message, $echo), FILE_APPEND);
     }
 
     /**
