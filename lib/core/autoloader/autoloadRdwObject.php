@@ -29,7 +29,7 @@ spl_autoload_register(function ($class) {
             $parts = explode("\\", $class);
             $filename = ($key === 'Basic' || $key === 'PeerBasic') ? $path . $class . '.php' : $path . $parts[1] . '.php';
             if (file_exists($filename)) {
-                require $filename;
+                require_once $filename;
                 return;
             }
 
@@ -37,7 +37,7 @@ spl_autoload_register(function ($class) {
             if ($key === 'Object' || $key === 'ObjectPeer') {
                 $filename = $searchInPackages($packagesPath, $parts[1]);
                 if ($filename) {
-                    require $filename;
+                    require_once $filename;
                     return;
                 }
             }

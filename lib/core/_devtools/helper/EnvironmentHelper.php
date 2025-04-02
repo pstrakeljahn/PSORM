@@ -40,10 +40,13 @@ class EnvironmentHelper
                 return false;
             }
         }
+
+        $dotenv = Dotenv::createImmutable(Config::BASE_PATH);
+        $dotenv->load();
         return true;
     }
 
-    public static function validateEnv(): bool
+    public static function validateEnv($throw = false): bool
     {
         $dotenv = Dotenv::createImmutable(Config::BASE_PATH);
         $dotenv->load();
@@ -67,19 +70,27 @@ class EnvironmentHelper
             file_put_contents(self::ENV_PATH, PHP_EOL . implode(PHP_EOL, array_map(fn($k) => "$k=", $missingKeys)), FILE_APPEND);
         }
         if (!empty($missingValues)) {
-            CliOutputHelper::output(".env is invalid: " . implode(", ", $missingValues));
+            $exception = ".env is invalid: " . implode(", ", $missingValues);
+            if ($throw) {
+                throw new \Exception($exception);
+            }
+            CliOutputHelper::output($exception);
             return false;
         }
         return true;
     }
 
-    public static function checkDbConnectivity(): bool
+    public static function checkDbConnectivity($throw = false): bool
     {
         try {
             new DBConnector(true);
             return true;
         } catch (\Exception $e) {
-            CliOutputHelper::output("Cannot connect to DB!");
+            $exception = "Cannot connect to DB!";
+            if ($throw) {
+                throw new \Exception($exception);
+            }
+            CliOutputHelper::output($exception);
             return false;
         }
     }

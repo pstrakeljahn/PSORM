@@ -6,6 +6,7 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use PS\Core\_devtools\Helper\EnvironmentHelper;
 use PS\Core\_devtools\Steps\BackendStructureCreationStep;
 use PS\Core\_devtools\Steps\BuildBasicClasses;
+use PS\Core\_devtools\Steps\CheckEnvironmentStep;
 use PS\Core\_devtools\Steps\GetEndpoints;
 use PS\Core\_devtools\Steps\InsertInitialData;
 use PS\Core\_devtools\Steps\InstallComposerStep;
@@ -20,6 +21,7 @@ class BuildInstance
             BackendStructureCreationStep::class,
             GetEndpoints::class,
             InstallComposerStep::class,
+            CheckEnvironmentStep::class,
             BuildBasicClasses::class,
             PrettyPhpStep::class,
             PrepareDatabase::class,
@@ -30,9 +32,7 @@ class BuildInstance
     public final static function run()
     {
         self::printPreambel();
-        if (EnvironmentHelper::createEnvFile() && EnvironmentHelper::validateEnv() && EnvironmentHelper::checkDbConnectivity()) {
-            BuildStep::workThroughSteps(self::steps());
-        }
+        BuildStep::workThroughSteps(self::steps());
     }
 
     private static function printPreambel(): void

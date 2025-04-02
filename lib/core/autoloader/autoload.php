@@ -2,7 +2,7 @@
 
 spl_autoload_register(function ($class) {
     if ($class === 'Config') {
-        require __DIR__ . '/../../../config/Config.php';
+        require_once __DIR__ . '/../../../config/Config.php';
         return;
     }
 
@@ -23,7 +23,7 @@ spl_autoload_register(function ($class) {
     $file = $base_dir . strtolower(str_replace('\\', '/', $class_path)) . DIRECTORY_SEPARATOR . $filename . '.php';
 
     if (file_exists($file)) {
-        require $file;
+        require_once $file;
         return;
     }
 
@@ -38,7 +38,7 @@ spl_autoload_register(function ($class) {
             $file = sprintf("%spackages/%s/%s%s/%s.php", $base_dir, strtolower($arrPath[1]), !in_array($arrPath[2], ["Meta", "Api"]) ? "src/" : '', strtolower(implode("/", $path)), $filename);
         }
         if (file_exists($file)) {
-            require $file;
+            require_once $file;
             return;
         }
     }

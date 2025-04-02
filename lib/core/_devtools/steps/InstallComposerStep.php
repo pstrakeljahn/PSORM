@@ -32,6 +32,12 @@ class InstallComposerStep extends BuildStep
             exec("php composer.phar --working-dir={$filePath} install > /dev/null 2>&1", $result);
             unlink("$filePath/composer-setup.php");
             unlink('composer.phar');
+
+            $composerAutoloaderPath = Config::BASE_PATH . 'lib/core/vendor/autoload.php';
+            if (file_exists($composerAutoloaderPath)) {
+                require $composerAutoloaderPath;
+            }
+
             return true;
         } catch (\Exception $e) {
             return false;
