@@ -34,7 +34,6 @@ class Logging
      * @param string $type Specify the log. Use LOG_TYPE_$type constant
      * @param string $message Log message. Datetime will be added
      * @param bool $echo Prints message
-     * @return bool true if sending was successful
      */
     public function add(string $type, string $message, bool $echo = false): void
     {
@@ -44,7 +43,7 @@ class Logging
     /**
      * Has to be executed to create log-files if they not exist
      *
-     * @return void
+     * @return bool
      */
     public static function generateFiles(): bool
     {

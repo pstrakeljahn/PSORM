@@ -5,6 +5,7 @@ namespace PS\Core\Database;
 use Config;
 use PDO;
 use PDOException;
+use PS\Core\Helper\Env;
 use PS\Core\Logging\Logging;
 
 class DBConnector
@@ -20,12 +21,12 @@ class DBConnector
 
     public function __construct($withoutDbSelection = false)
     {
-        $this->host = $_ENV["DB_HOST"];
-        $this->db_name = $_ENV["DB_NAME"];
-        $this->username = $_ENV["DB_USER"];
-        $this->password = $_ENV["DB_PASS"];
-        $this->charset = $_ENV["DB_CHARSET"];
-        $this->port = $_ENV["DB_PORT"];
+        $this->host = Env::get("DB_HOST");
+        $this->db_name = Env::get("DB_NAME");
+        $this->username = Env::get("DB_USER");
+        $this->password = Env::get("DB_PASS");
+        $this->charset = Env::get("DB_CHARSET");
+        $this->port = Env::get("DB_PORT");
 
         $dsn = "mysql:host=$this->host;charset=$this->charset;port=$this->port;";
         if (!$withoutDbSelection) {
@@ -42,7 +43,6 @@ class DBConnector
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
             throw new \Exception('Cannot connect to Database: ' . $this->error);
-            die();
         }
     }
 

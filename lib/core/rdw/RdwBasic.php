@@ -34,6 +34,7 @@ class RdwBasic
     public final function save()
     {
         $user = null;
+        $userID = null;
         try {
             $instance = Session::getInstance();
             $user = $instance->getUser();

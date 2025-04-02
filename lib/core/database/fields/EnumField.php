@@ -5,7 +5,6 @@ namespace PS\Core\Database\Fields;
 class EnumField extends FieldBase
 {
     private $allowedValues;
-    private $datatype = FieldBase::ENUM;
 
     public function getMySQLDefinition()
     {

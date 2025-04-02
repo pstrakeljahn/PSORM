@@ -24,7 +24,7 @@ class BackendStructureCreationStep extends BuildStep
             'build' => ['customEndpoints', 'peerBasic', 'basic'],
             'logs' => ['mails'],
             'files' => null,
-            'tmp' => null
+            'temp' => null
         ];
 
         return self::createFolders($structure) && self::createLogFiles();

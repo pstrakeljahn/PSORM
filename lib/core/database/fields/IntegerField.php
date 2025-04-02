@@ -8,7 +8,6 @@ class IntegerField extends FieldBase
     private bool $unsigned = false;
     private bool $isBigInt = false;
     private bool $autoIncrement = false;
-    private $datatype = FieldBase::INT;
     private array $fkSettings = [
         "tableName" => null,
         "column" => null
@@ -32,7 +31,7 @@ class IntegerField extends FieldBase
         return $this;
     }
 
-    public final function setUnsigned(int $unsigned): self
+    public final function setUnsigned(bool $unsigned): self
     {
         $this->unsigned = $unsigned;
         return $this;
@@ -41,9 +40,6 @@ class IntegerField extends FieldBase
     public final function setBigInt(bool $val)
     {
         $this->isBigInt = $val;
-        if ($val) {
-            $this->datatype = FieldBase::BIGINT;
-        }
         return $this;
     }
 

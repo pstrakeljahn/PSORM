@@ -8,10 +8,10 @@ use PS\Core\Database\Fields\IntegerField;
 
 abstract class Entity
 {
-    readonly string $table;
-    readonly string $entityName;
-    readonly array $arrPrimaryKey;
-    readonly bool $apiDisabled;
+    public string $table;
+    public string $entityName;
+    public array $arrPrimaryKey;
+    public bool $apiDisabled;
     private $preparedFields = null;
     protected $fields = [];
     public static string $primaryKey = 'ID';
@@ -54,8 +54,6 @@ abstract class Entity
     public final function _getFields(): array
     {
         if ($this->preparedFields === null) {
-            $this->preparedFields === array();
-
             $this->preparedFields = [
                 ...$this->arrPrimaryKey,
                 ...$this->fields

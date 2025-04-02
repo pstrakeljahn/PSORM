@@ -3,6 +3,7 @@
 namespace PS\Core\Api;
 
 use Config;
+use PS\Core\Helper\Env;
 
 class Response
 {
@@ -33,11 +34,11 @@ class Response
             'error' => $this->error,
         ];
 
-        if (Config::DEBUG) {
+        if (Env::get("DEBUG")) {
             $arrResponse = [...$arrResponse, 'debug' => $this->debug];
         }
 
-        $jsonString = json_encode($arrResponse, Config::DEBUG ? JSON_PRETTY_PRINT : 0);
+        $jsonString = json_encode($arrResponse, Env::get("DEBUG") ? JSON_PRETTY_PRINT : 0);
         echo $jsonString;
 
         return $jsonString;

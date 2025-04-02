@@ -3,14 +3,15 @@
 namespace PS\Core\_devtools\Helper;
 
 use Config;
-use Dotenv\Dotenv;
 use PS\Core\Database\DBConnector;
 use PS\Core\Helper\CliOutputHelper;
+use PS\Core\Helper\Env;
 
 class EnvironmentHelper
 {
     private const ENV_PATH = Config::BASE_PATH . '.env';
     private const REQUIRED_KEYS = [
+        "DEBUG",
         "DB_HOST",
         "DB_PORT",
         "DB_NAME",
@@ -41,28 +42,26 @@ class EnvironmentHelper
             }
         }
 
-        $dotenv = Dotenv::createImmutable(Config::BASE_PATH);
-        $dotenv->load();
+        Env::load();
         return true;
     }
 
     public static function validateEnv($throw = false): bool
     {
-        $dotenv = Dotenv::createImmutable(Config::BASE_PATH);
-        $dotenv->load();
+        Env::load();
         $missingKeys = [];
         $missingValues = [];
 
         foreach (self::REQUIRED_KEYS as $key) {
-            if (!isset($_ENV[$key])) {
+            if (is_null(Env::get($key))) {
                 $missingKeys[] = $key;
                 $missingValues[] = $key;
-            } elseif ($_ENV[$key] === "") {
+            } elseif (Env::get($key) === "") {
                 $missingValues[] = $key;
             }
         }
         foreach (self::ADDITIONAL_KEYS as $key) {
-            if (!isset($_ENV[$key])) {
+            if (is_null(Env::get($key))) {
                 $missingKeys[] = $key;
             }
         }

@@ -2,6 +2,7 @@
   "require": {
     "twig/twig": "^3.0",
     "vlucas/phpdotenv": "^5.6.1",
-    "phpmailer/phpmailer": "^6.9.3"
+    "phpmailer/phpmailer": "^6.9.3",
+    "phpstan/phpstan": "^2.1.11"
   }
 }

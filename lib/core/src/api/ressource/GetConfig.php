@@ -5,6 +5,7 @@ namespace PS\Core\Src\Api\Ressource;
 use Config;
 use PS\Core\Api\Abstracts\EndpointDto;
 use PS\Core\Api\Abstracts\EndpointInterface;
+use PS\Core\Helper\Env;
 
 class GetConfig implements EndpointInterface
 {
@@ -18,6 +19,6 @@ class GetConfig implements EndpointInterface
 
     public function get()
     {
-        return array("debug" => Config::DEBUG);
+        return array("debug" => Env::get("DEBUG"));
     }
 }

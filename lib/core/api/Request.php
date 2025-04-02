@@ -32,12 +32,6 @@ class Request
         if (!is_null($this->origin) && !in_array($this->origin, Config::ALLOWED_ORIGINS)) {
             throw new \Exception('Origin is not allowed');
         }
-        $this->getRequestType();
-        $this->setParameters();
-    }
-
-    private function getRequestType(): void
-    {
         $urlParts = parse_url($this->requestUri);
         $path = trim($urlParts['path'], '/');
         $this->segments = explode('/', $path);
@@ -51,10 +45,7 @@ class Request
             throw new \Exception('Request Type is not allowed');
         }
         $this->requestType = $requestType;
-    }
 
-    private function setParameters(): void
-    {
         $parameters = [];
         if ($this->httpMethod === 'GET') {
             $parameters = [...$_GET];

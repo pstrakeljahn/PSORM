@@ -1,14 +1,15 @@
 <?php
 
-use PS\Core\_devtools\Helper\ApiHelper;
 use PS\Core\Api\Abstracts\Endpoint;
 use PS\Core\Api\Request;
 use PS\Core\Api\Response;
 use PS\Core\Api\Session;
+use PS\Core\Helper\ApiHelper;
 use PS\Core\Logging\Logging;
 
+require_once '../lib/core/init.php';
+
 try {
-    require '../lib/core/init.php';
     $loggedIn = false;
     $request = Request::getInstance();
     $sessionInstance = Session::getInstance($request->segments[$request->apiIndex + 2] === Request::TYPE_LOGIN);

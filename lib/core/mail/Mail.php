@@ -3,6 +3,7 @@
 namespace PS\Core\Mail;
 
 use PHPMailer\PHPMailer\PHPMailer;
+use PS\Core\Helper\Env;
 use PS\Core\Helper\MailHelper;
 use PS\Core\Logging\Logging;
 
@@ -16,7 +17,7 @@ class Mail
     private PHPMailer $mailer;
     private Logging $log;
 
-    private ?array $arrReceiver = [];
+    private array $arrReceiver = [];
     private ?string $subject = null;
     private ?string $plainText = null;
     private ?string $htmlContent = null;
@@ -31,12 +32,12 @@ class Mail
     public function __construct()
     {
         if (
-            !isset($_ENV['MAIL_HOST']) &&
-            !isset($_ENV['MAIL_USER']) &&
-            !isset($_ENV['MAIL_PASS']) &&
-            !isset($_ENV['MAIL_PORT']) &&
-            !isset($_ENV['MAIL_FROM_ADDRESS']) &&
-            !isset($_ENV['MAIL_FROM_NAME'])
+            is_null(Env::get('MAIL_HOST')) &&
+            is_null(Env::get('MAIL_USER')) &&
+            is_null(Env::get('MAIL_PASS')) &&
+            is_null(Env::get('MAIL_PORT')) &&
+            is_null(Env::get('MAIL_FROM_ADDRESS')) &&
+            is_null(Env::get('MAIL_FROM_NAME'))
         ) {
             $this->log->add(Logging::LOG_TYPE_MAIL, "Mail Server is not configured!", true);
         }
@@ -44,13 +45,13 @@ class Mail
         $this->mailer = new PHPMailer(true);
         $this->log = Logging::getInstance();
         $this->mailer->isSMTP();
-        $this->mailer->Host       = $_ENV['MAIL_HOST'];
+        $this->mailer->Host       = Env::get('MAIL_HOST');
         $this->mailer->SMTPAuth   = true;
-        $this->mailer->Username   = $_ENV['MAIL_USER'];
-        $this->mailer->Password   = $_ENV['MAIL_PASS'];
+        $this->mailer->Username   = Env::get('MAIL_USER');
+        $this->mailer->Password   = Env::get('MAIL_PASS');
         $this->mailer->SMTPSecure = 'tls';
-        $this->mailer->Port       = $_ENV['MAIL_PORT'];
-        $this->mailer->setFrom($_ENV['MAIL_USER'], $_ENV['MAIL_FROM_NAME']);
+        $this->mailer->Port       = Env::get('MAIL_PORT');
+        $this->mailer->setFrom(Env::get('MAIL_USER'), Env::get('MAIL_FROM_NAME'));
         $this->mailer->isHTML(true);
         $this->mailer->CharSet = 'UTF-8';
     }

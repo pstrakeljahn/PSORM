@@ -42,14 +42,12 @@ class BuildInstance
         $borderSymbol = '*';
         $textLength = strlen($text);
 
-        if ($textLength > ($borderLength - 4)) {
-            $text = substr($text, 0, $borderLength - 4);
-            $textLength = strlen($text);
-        }
+        $text = substr($text, 0, $borderLength - 4);
+        $textLength = strlen($text);
 
         $padding = ($borderLength - 2 - $textLength) / 2;
-        $leftPadding = floor($padding);
-        $rightPadding = ceil($padding);
+        $leftPadding = intval(floor($padding));
+        $rightPadding = intval(ceil($padding));
 
         $border = str_repeat($borderSymbol, $borderLength);
         $textLine = $borderSymbol . str_repeat(' ', $leftPadding) . $text . str_repeat(' ', $rightPadding) . $borderSymbol;

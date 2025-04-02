@@ -1,6 +1,6 @@
 <?php
 
-namespace PS\Core\_devtools\Helper;
+namespace PS\Core\Helper;
 
 use PS\Core\Api\Request;
 use PS\Core\Database\Criteria;

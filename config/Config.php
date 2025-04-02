@@ -3,12 +3,7 @@
 class Config
 {
     // Globals
-    const DEBUG = true;
     const ALLOWED_ORIGINS = ['localhost', 'http://localhost:8100'];
-
-    // Login Method - If not specified autochoosen
-    const LOGIN_METHOD = PS\Core\Api\Authmethodes\BearerToken::class;
-    const TOKEN_EXPIRED_IN_S = 3600;
 
     // Pathes
     const BASE_PATH = __DIR__ . '/../';

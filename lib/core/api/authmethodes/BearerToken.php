@@ -9,6 +9,7 @@ use Object\User;
 use ObjectPeer\SessionPeer;
 use ObjectPeer\UserPeer;
 use PS\Core\Database\Criteria;
+use PS\Core\Helper\Env;
 use PS\Core\Logging\Logging;
 
 class BearerToken implements AuthMethodeInterface
@@ -22,7 +23,7 @@ class BearerToken implements AuthMethodeInterface
         'exp' => null
     ];
 
-    private readonly ?array $token;
+    private ?array $token = null;
     private Request $request;
 
     public function __construct($login = false)
@@ -45,7 +46,6 @@ class BearerToken implements AuthMethodeInterface
         } else {
             return $arrUser[0];
         }
-        return null;
     }
 
     public function getLoggedIn(): bool
@@ -122,7 +122,7 @@ class BearerToken implements AuthMethodeInterface
         $dataArray['firstname'] = $user->getFirstname();
         $dataArray['lastname'] = $user->getLastname();
         $dataArray['mail'] = $user->getMail();
-        $dataArray['exp'] = time() + Config::TOKEN_EXPIRED_IN_S;
+        $dataArray['exp'] = time() + Env::get("TOKEN_EXPIRED_IN_S");
 
         return self::generateToken($dataArray);
     }
@@ -180,7 +180,7 @@ class BearerToken implements AuthMethodeInterface
         // decode payload
         $arrPayload = json_decode($decodedPayload, true);
 
-        if ($signatureValid && (!$tokenExpired || is_null(Config::TOKEN_EXPIRED_IN_S))) {
+        if ($signatureValid && (!$tokenExpired || is_null(Env::get("TOKEN_EXPIRED_IN_S")))) {
             return $arrPayload;
         } else {
             return null;

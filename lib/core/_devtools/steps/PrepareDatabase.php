@@ -7,6 +7,7 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use PS\Core\_devtools\Helper\EntityHelper;
 use PS\Core\Database\DBConnector;
 use PS\Core\Database\Entity;
+use PS\Core\Helper\Env;
 
 class PrepareDatabase extends BuildStep
 {
@@ -41,9 +42,9 @@ class PrepareDatabase extends BuildStep
     private function checkDatabase()
     {
         $db = new DBConnector(true);
-        $res = $db->executeQuery("SHOW DATABASES LIKE '" . $_ENV["DB_NAME"] . "'");
+        $res = $db->executeQuery("SHOW DATABASES LIKE '" . Env::get("DB_NAME") . "'");
         if (!count($res)) {
-            $db->executeQuery("CREATE DATABASE `" . $_ENV["DB_NAME"] . "` CHARACTER SET " . $_ENV["DB_CHARSET"] . " COLLATE " . $_ENV["DB_CHARSET"] . "_general_ci");
+            $db->executeQuery("CREATE DATABASE `" .  Env::get("DB_NAME") . "` CHARACTER SET " . Env::get("DB_CHARSET") . " COLLATE " . Env::get("DB_CHARSET") . "_general_ci");
         }
     }
 
@@ -132,13 +133,12 @@ class PrepareDatabase extends BuildStep
                         WHERE CONSTRAINT_SCHEMA = '%s' 
                         AND TABLE_NAME = '%s' 
                         AND CONSTRAINT_NAME = '%s'",
-                        $_ENV["DB_NAME"],
+                        Env::get("DB_NAME"),
                         $tableName,
                         $fkName
                     )
                 );
                 if (count($res)) {
-                    $res[0]["CONSTRAINT_NAME"] === $fkName;
                     continue 2;
                 }
                 $this->db->executeQuery($query);

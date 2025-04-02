@@ -43,8 +43,8 @@ class MailHelper
             "smtpSecure" => $mail->SMTPSecure,
             "port" => $mail->Port,
             "setFrom" => [
-                "mail" => $_ENV['MAIL_USER'],
-                "name" => $_ENV['MAIL_FROM_NAME']
+                "mail" => Env::get('MAIL_USER'),
+                "name" => Env::get('MAIL_FROM_NAME')
             ],
             "isHTML" => true,
             "charSet" => $mail->CharSet,
