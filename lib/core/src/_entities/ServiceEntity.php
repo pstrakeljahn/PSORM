@@ -10,12 +10,12 @@ class ServiceEntity extends Entity
 {
     public bool $withoutMeta = true;
 
-    protected function setEntitname(): string
+    protected function setEntityName(): string
     {
         return 'Service';
     }
 
-    protected function setTabelName(): string
+    protected function setTableName(): string
     {
         return 'services';
     }

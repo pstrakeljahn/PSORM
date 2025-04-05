@@ -6,11 +6,12 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PS\Core\Helper\Env;
 use PS\Core\Helper\MailHelper;
 use PS\Core\Logging\Logging;
+use Exception;
 
 /**
  * Class Mail
  *
- * A wrapper for PHPMailer to simplify sending emails with basic configuration.
+ * A wrapper for PHPMailer to simplify sending emails with unified config, logging and backup.
  */
 class Mail
 {
@@ -26,47 +27,37 @@ class Mail
      * Mail constructor.
      *
      * Initializes the PHPMailer instance with SMTP settings from environment variables.
-     *
-     * @throws \Exception if required environment variables are missing
      */
     public function __construct()
     {
-        if (
-            is_null(Env::get('MAIL_HOST')) &&
-            is_null(Env::get('MAIL_USER')) &&
-            is_null(Env::get('MAIL_PASS')) &&
-            is_null(Env::get('MAIL_PORT')) &&
-            is_null(Env::get('MAIL_FROM_ADDRESS')) &&
-            is_null(Env::get('MAIL_FROM_NAME'))
-        ) {
-            $this->log->add(Logging::LOG_TYPE_MAIL, "Mail Server is not configured!", true);
+        $this->log = Logging::getInstance();
+
+        // Validate config
+        $requiredVars = ['MAIL_HOST', 'MAIL_USER', 'MAIL_PASS', 'MAIL_PORT', 'MAIL_FROM_NAME'];
+        foreach ($requiredVars as $var) {
+            if (is_null(Env::get($var))) {
+                $this->log->add(Logging::LOG_TYPE_MAIL, "Mail server configuration missing: $var", true);
+            }
         }
 
         $this->mailer = new PHPMailer(true);
-        $this->log = Logging::getInstance();
         $this->mailer->isSMTP();
         $this->mailer->Host       = Env::get('MAIL_HOST');
         $this->mailer->SMTPAuth   = true;
         $this->mailer->Username   = Env::get('MAIL_USER');
         $this->mailer->Password   = Env::get('MAIL_PASS');
         $this->mailer->SMTPSecure = 'tls';
-        $this->mailer->Port       = Env::get('MAIL_PORT');
+        $this->mailer->Port       = (int) Env::get('MAIL_PORT');
         $this->mailer->setFrom(Env::get('MAIL_USER'), Env::get('MAIL_FROM_NAME'));
         $this->mailer->isHTML(true);
         $this->mailer->CharSet = 'UTF-8';
     }
 
-    public function getMail()
+    public function getMail(): PHPMailer
     {
         return $this->mailer;
     }
 
-    /**
-     * Sets the recipient email address.
-     *
-     * @param string $mailAddress The email address of the recipient.
-     * @return $this
-     */
     public function addReceiver(string $mailAddress): self
     {
         $this->arrReceiver[] = $mailAddress;
@@ -78,12 +69,6 @@ class Mail
         return $this->arrReceiver;
     }
 
-    /**
-     * Sets the email subject.
-     *
-     * @param string $subject The subject of the email.
-     * @return $this
-     */
     public function setSubject(string $subject): self
     {
         $this->subject = $subject;
@@ -95,12 +80,6 @@ class Mail
         return $this->subject;
     }
 
-    /**
-     * Sets the plain text content of the email.
-     *
-     * @param string $plainText The plain text version of the email body.
-     * @return $this
-     */
     public function setContent(string $plainText): self
     {
         $this->plainText = $plainText;
@@ -112,12 +91,6 @@ class Mail
         return $this->plainText;
     }
 
-    /**
-     * Sets the HTML content of the email.
-     *
-     * @param string $htmlString The HTML version of the email body.
-     * @return $this
-     */
     public function setContentHtml(string $htmlString): self
     {
         $this->htmlContent = $htmlString;
@@ -132,66 +105,72 @@ class Mail
     /**
      * Adds an attachment to the email.
      *
-     * @param string $filePath The full file path of the attachment.
-     * @param string|null $name Optional name to display for the attached file.
+     * @param string $filePath Full path to the file.
+     * @param string|null $name Optional file name.
      * @return $this
-     * @throws \Exception If the file does not exist.
+     * @throws Exception If file does not exist.
      */
     public function addAttachment(string $filePath, ?string $name = null): self
     {
         if (!file_exists($filePath)) {
-            throw new \Exception("Attachment file not found: $filePath");
+            throw new Exception("Attachment file not found: $filePath");
         }
 
-        if ($name === null) {
-            $name = basename($filePath);
-        }
-
+        $name ??= basename($filePath);
         $this->mailer->addAttachment($filePath, $name);
+
         return $this;
     }
 
     public function getAttachments(): array
     {
-        $returnArray = [];
-        foreach ($this->mailer->getAttachments() as $attchment) {
-            $returnArray[] = realpath($attchment[0]);
+        $paths = [];
+        foreach ($this->mailer->getAttachments() as $attachment) {
+            $paths[] = realpath($attachment[0]);
         }
-
-        return $returnArray;
+        return $paths;
     }
 
     /**
-     * Sends the email.
+     * Sends the email and logs it.
      *
-     * Validates that recipient, subject, and plain text content are set before sending.
-     *
-     * @return bool True if the email was successfully sent.
-     * @throws \Exception if required fields are missing or sending fails.
+     * @return bool
+     * @throws Exception If required fields are missing.
      */
     public function send(): bool
     {
-        if (!count($this->arrReceiver) || empty($this->subject) || (empty($this->plainText) && empty($this->htmlContent))) {
-            throw new \Exception("Receiver, subject, and plain text content must be set before sending.");
+        if (
+            empty($this->arrReceiver) ||
+            empty($this->subject) ||
+            (empty($this->plainText) && empty($this->htmlContent))
+        ) {
+            throw new Exception("Receiver, subject and content must be set before sending.");
         }
 
         try {
             $this->mailer->clearAllRecipients();
-            foreach ($this->getReceivers() as $receiver) {
+            foreach ($this->arrReceiver as $receiver) {
                 $this->mailer->addAddress($receiver);
             }
+
             $this->mailer->Subject = $this->subject;
-            $this->mailer->AltBody = $this->plainText ?? "";
+            $this->mailer->AltBody = $this->plainText ?? '';
             $this->mailer->Body    = $this->htmlContent ?? nl2br(htmlentities($this->plainText));
 
             if ($this->mailer->send()) {
-                $this->log->add(Logging::LOG_TYPE_MAIL, sprintf("Mail send successfully (%s)", implode(", ", $this->getReceivers())));
+                $this->log->add(
+                    Logging::LOG_TYPE_MAIL,
+                    sprintf("Mail sent successfully (%s)", implode(', ', $this->arrReceiver))
+                );
                 MailHelper::saveMailCopy($this);
             }
 
             return true;
-        } catch (\Exception $e) {
-            $this->log->add(Logging::LOG_TYPE_MAIL, sprintf("Failed to send email: %s", $this->mailer->ErrorInfo));
+        } catch (Exception $e) {
+            $this->log->add(
+                Logging::LOG_TYPE_MAIL,
+                sprintf("Failed to send email: %s", $this->mailer->ErrorInfo)
+            );
             return false;
         }
     }

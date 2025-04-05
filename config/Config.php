@@ -3,7 +3,7 @@
 class Config
 {
     // Globals
-    const ALLOWED_ORIGINS = ['localhost', 'http://localhost:8100'];
+    const ALLOWED_ORIGINS = ['localhost', 'http://localhost:4200'];
 
     // Pathes
     const BASE_PATH = __DIR__ . '/../';

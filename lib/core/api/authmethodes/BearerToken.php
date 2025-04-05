@@ -3,7 +3,6 @@
 namespace PS\Core\Api\Authmethodes;
 
 use PS\Core\Api\Request;
-use Config;
 use Object\Session;
 use Object\User;
 use ObjectPeer\SessionPeer;
@@ -12,263 +11,364 @@ use PS\Core\Database\Criteria;
 use PS\Core\Helper\Env;
 use PS\Core\Logging\Logging;
 
+/**
+ * Class BearerToken
+ *
+ * Handles authentication via JWT tokens.
+ */
 class BearerToken implements AuthMethodeInterface
 {
+    /** @var array Default token structure */
     private const TOKEN_BODY = [
-        'UserID' => null,
-        'username' => null,
+        'UserID'    => null,
+        'username'  => null,
         'firstname' => null,
-        'lastname' => null,
-        'mail' => null,
-        'exp' => null
+        'lastname'  => null,
+        'mail'      => null,
+        'exp'       => null,
     ];
 
+    /** @var array|null The decoded JWT payload */
     private ?array $token = null;
+
+    /** @var Request Current request object */
     private Request $request;
 
-    public function __construct($login = false)
+    /**
+     * BearerToken constructor.
+     *
+     * @param bool $login Whether this is a login attempt or not.
+     * @throws \Exception
+     */
+    public function __construct(bool $login = false)
     {
         $this->request = Request::getInstance();
+
         if (!$login) {
             $this->token = self::parseToken($this->request);
         }
     }
 
+    /**
+     * Returns the authenticated user.
+     *
+     * @return User|null
+     * @throws \Exception
+     */
     public function getUser(): ?User
     {
-        $arrUser = UserPeer::find(
+        $users = UserPeer::find(
             Criteria::getInstace()
                 ->add(UserPeer::USERNAME, $this->token['username'])
                 ->addLimit(0, 1)
         );
-        if (!count($arrUser)) {
-            throw new \Exception('Invalid Crentials');
-        } else {
-            return $arrUser[0];
+
+        if (empty($users)) {
+            throw new \Exception('Invalid credentials.');
         }
+
+        return $users[0];
     }
 
+    /**
+     * Checks if user is authenticated.
+     *
+     * @return bool
+     */
     public function getLoggedIn(): bool
     {
         return isset($this->token['UserID']);
     }
 
+    /**
+     * Performs login and returns JWTs.
+     *
+     * @return array|null
+     * @throws \Exception
+     */
     public function login(): ?array
     {
         if ($this->request->httpMethod !== 'POST') {
-            throw new \Exception('Use POST method to login');
+            throw new \Exception('Use POST method to login.');
         }
-        if (!isset($this->request->parameters['username'])) {
-            throw new \Exception('Username has to be set.');
+
+        $username = $this->request->parameters['username'] ?? null;
+        $password = $this->request->parameters['password'] ?? null;
+
+        if (!$username || !$password) {
+            throw new \Exception('Username and password must be set.');
         }
-        if (!isset($this->request->parameters['password'])) {
-            throw new \Exception('Password has to be set.');
+
+        $user = self::checkPassword([
+            'username' => $username,
+            'password' => $password,
+        ]);
+
+        if (!$user) {
+            throw new \Exception('Invalid credentials.');
         }
-        $user = self::checkPassword($this->request->parameters);
-        if (is_null($user)) {
-            throw new \Exception('Invalid credentials');
-        }
+
         $token = self::createToken($user);
-        $refereshToken = self::createRefreshToken($user);
-        $this->createSession($refereshToken, $user);
-        return ['token' => $token, 'refreshToken' => $refereshToken];
+        $refreshToken = self::createRefreshToken($user);
+        $this->createSession($refreshToken, $user);
+
+        return ['token' => $token, 'refreshToken' => $refreshToken];
     }
 
-    private function createSession(string $refereshToken, User $user)
-    {
-        $arrSession = SessionPeer::find(Criteria::getInstace()->add(SessionPeer::USERID, $user->getID()));
-        if (count($arrSession)) {
-            $session = $arrSession[0];
-        } else {
-            $session = new Session;
-        }
-        $session->setUserid($user->getID())->setRefreshtoken($refereshToken)->save();
-    }
-
-    private static function checkPassword(array $paramters): ?User
-    {
-        $arrUser = UserPeer::find(
-            Criteria::getInstace()
-                ->add(UserPeer::USERNAME, $paramters['username'])
-                ->addLimit(0, 1)
-        );
-        if (!count($arrUser)) {
-            throw new \Exception('Invalid Crentials');
-        } else {
-            if (password_verify($paramters['password'], $arrUser[0]->getPassword())) {
-                return $arrUser[0];
-            }
-        }
-        return null;
-    }
-
-    private static function parseToken(Request $request): ?array
-    {
-        $token = self::getBearerToken();
-        if ($request->httpMethod !== 'OPTIONS') {
-            if ($token === null) {
-                throw new \Exception('Cannot get JWT Token');
-            }
-            return self::validateToken($token);
-        }
-        return null;
-    }
-
-    public static function createToken(User $user): string
-    {
-        $dataArray = self::TOKEN_BODY;
-        $dataArray['UserID'] = $user->getID();
-        $dataArray['username'] = $user->getUsername();
-        $dataArray['firstname'] = $user->getFirstname();
-        $dataArray['lastname'] = $user->getLastname();
-        $dataArray['mail'] = $user->getMail();
-        $dataArray['exp'] = time() + Env::get("TOKEN_EXPIRED_IN_S");
-
-        return self::generateToken($dataArray);
-    }
-
-    private static function createRefreshToken(User $user)
-    {
-        $dataArray = [
-            'UserID' => $user->getId(),
-            'timestamp' => time()
-        ];
-
-        return self::generateToken($dataArray);
-    }
-
-    private static function generateToken(array $dataArray)
-    {
-        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
-        $payload = json_encode(
-            $dataArray
-        );
-
-        $log = Logging::getInstance();
-        $log->add(Logging::LOG_TYPE_AUTHORISATION, "Token created for User with ID " . $dataArray['UserID']);
-
-        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($header));
-        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($payload));
-
-        $signature = hash_hmac('sha256', $base64UrlHeader . '.' . $base64UrlPayload, self::generateSecret(), true);
-        $base64UrlSignature = self::base64url_encode($signature);
-        $jwt = $base64UrlHeader . '.' . $base64UrlPayload . '.' . $base64UrlSignature;
-        return $jwt;
-    }
-
-    public static final function validateToken($jwt): ?array
-    {
-        list($header, $payload, $signatureProvided) = explode('.', $jwt);
-
-        // Decode Header and Payload
-        $decodedHeader = base64_decode($header);
-        $decodedPayload = base64_decode($payload);
-
-        // Check Token Expiration
-        $expiration = json_decode($decodedPayload)->exp;
-        $tokenExpired = is_null($expiration) ? true : ($expiration - time()) < 0;
-
-        // Base64URL-Encode Header/Payload
-        $base6UrlHeader = self::base64url_encode($decodedHeader);
-        $base64UrlPayload = self::base64url_encode($decodedPayload);
-
-        // Signature
-        $signature = hash_hmac('SHA256', $base6UrlHeader . '.' . $base64UrlPayload, self::generateSecret(), true);
-        $base64UrlSignature = self::base64url_encode($signature);
-        $signatureValid = ($base64UrlSignature === $signatureProvided);
-
-        // decode payload
-        $arrPayload = json_decode($decodedPayload, true);
-
-        if ($signatureValid && (!$tokenExpired || is_null(Env::get("TOKEN_EXPIRED_IN_S")))) {
-            return $arrPayload;
-        } else {
-            return null;
-        }
-    }
-
-    private static function base64url_encode($str)
-    {
-        return rtrim(strtr(base64_encode($str), '+/', '-_'), '=');
-    }
-
-    private static function generateSecret(): string
-    {
-        $serverName = $_SERVER['SERVER_NAME'];
-        $serverAddr = $_SERVER['SERVER_ADDR'];
-        $documentRoot = $_SERVER['DOCUMENT_ROOT'];
-        $data = $serverName . $serverAddr . $documentRoot;
-        $secret = hash('sha256', $data);
-        return $secret;
-    }
-
-    private static function getAuthorizationHeader(): ?string
-    {
-        if (isset($_SERVER['Authorization'])) {
-            return trim($_SERVER['Authorization']);
-        }
-
-        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
-            return trim($_SERVER['HTTP_AUTHORIZATION']);
-        }
-
-        if (function_exists('apache_request_headers')) {
-            $requestHeaders = array_change_key_case(apache_request_headers(), CASE_LOWER);
-            if (isset($requestHeaders['authorization'])) {
-                return trim($requestHeaders['authorization']);
-            }
-        }
-        return null;
-    }
-
-    private static function getBearerToken(): ?string
-    {
-        $headers = self::getAuthorizationHeader();
-        if (!empty($headers) && preg_match('/Bearer\s(\S+)/', $headers, $matches)) {
-            return $matches[1];
-        }
-        return null;
-    }
-
-    public function logout(): ?array
+    /**
+     * Logs out by deleting the user's session.
+     *
+     * @return array
+     * @throws \Exception
+     */
+    public function logout(): array
     {
         if ($this->request->httpMethod !== 'POST') {
-            throw new \Exception('Use POST method to logout');
+            throw new \Exception('Use POST method to logout.');
         }
-        $arrUserSession = SessionPeer::find(
-            Criteria::getInstace()
-                ->add(SessionPeer::USERID, $this->token['UserID'])
+
+        $sessions = SessionPeer::find(
+            Criteria::getInstace()->add(SessionPeer::USERID, $this->token['UserID'])
         );
 
-        foreach ($arrUserSession as $session) {
+        foreach ($sessions as $session) {
             $session->delete();
         }
+
         return [];
     }
 
+    /**
+     * Refreshes an access token using a valid refresh token.
+     *
+     * @return array|null
+     * @throws \Exception
+     */
     public function refresh(): ?array
     {
         if (!in_array($this->request->httpMethod, ['POST', 'OPTIONS'])) {
-            throw new \Exception('Use POST method to refresh');
+            throw new \Exception('Use POST method to refresh.');
         }
-        if (!isset($this->request->parameters['refreshToken'])) {
-            throw new \Exception('RefreshToken is missing.');
+
+        $refreshToken = $this->request->parameters['refreshToken'] ?? null;
+        if (!$refreshToken) {
+            throw new \Exception('Refresh token is missing.');
         }
-        $arrUserSession = SessionPeer::find(
+
+        $sessions = SessionPeer::find(
             Criteria::getInstace()
                 ->add(SessionPeer::USERID, $this->token['UserID'])
-                ->add(SessionPeer::REFRESHTOKEN, $this->request->parameters['refreshToken'])
+                ->add(SessionPeer::REFRESHTOKEN, $refreshToken)
         );
 
-        if (!count($arrUserSession)) {
+        if (empty($sessions)) {
             throw new \Exception('No active session found.');
         }
 
         $user = $this->getUser();
         $newToken = self::createToken($user);
-        $newRefreshtoken = self::createRefreshToken($user);
-        $this->createSession($newRefreshtoken, $user);
+        $newRefreshToken = self::createRefreshToken($user);
+        $this->createSession($newRefreshToken, $user);
 
-        return ['token' => $newToken, 'refreshToken' => $newRefreshtoken];
+        return ['token' => $newToken, 'refreshToken' => $newRefreshToken];
+    }
+
+    /**
+     * Verifies user credentials and password.
+     *
+     * @param array $params
+     * @return User|null
+     * @throws \Exception
+     */
+    private static function checkPassword(array $params): ?User
+    {
+        $users = UserPeer::find(
+            Criteria::getInstace()
+                ->add(UserPeer::USERNAME, $params['username'])
+                ->addLimit(0, 1)
+        );
+
+        if (empty($users)) {
+            throw new \Exception('Invalid credentials.');
+        }
+
+        $user = $users[0];
+        if (password_verify($params['password'], $user->getPassword())) {
+            return $user;
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a user session in the DB.
+     *
+     * @param string $refreshToken
+     * @param User $user
+     * @return void
+     */
+    private function createSession(string $refreshToken, User $user): void
+    {
+        $sessions = SessionPeer::find(
+            Criteria::getInstace()->add(SessionPeer::USERID, $user->getID())
+        );
+
+        $session = $sessions[0] ?? new Session();
+        $session
+            ->setUserid($user->getID())
+            ->setRefreshtoken($refreshToken)
+            ->save();
+    }
+
+    /**
+     * Parses the JWT from the Authorization header.
+     *
+     * @param Request $request
+     * @return array|null
+     * @throws \Exception
+     */
+    private static function parseToken(Request $request): ?array
+    {
+        $token = self::getBearerToken();
+
+        if ($request->httpMethod !== 'OPTIONS') {
+            if (!$token) {
+                throw new \Exception('Cannot get JWT token.');
+            }
+            return self::validateToken($token);
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a signed JWT for a user.
+     *
+     * @param User $user
+     * @return string
+     */
+    public static function createToken(User $user): string
+    {
+        $payload = self::TOKEN_BODY;
+        $payload['UserID'] = $user->getID();
+        $payload['username'] = $user->getUsername();
+        $payload['firstname'] = $user->getFirstname();
+        $payload['lastname'] = $user->getLastname();
+        $payload['mail'] = $user->getMail();
+        $payload['exp'] = time() + Env::get("TOKEN_EXPIRED_IN_S");
+
+        return self::generateToken($payload);
+    }
+
+    /**
+     * Creates a refresh token.
+     *
+     * @param User $user
+     * @return string
+     */
+    private static function createRefreshToken(User $user): string
+    {
+        return self::generateToken([
+            'UserID' => $user->getID(),
+            'timestamp' => time(),
+        ]);
+    }
+
+    /**
+     * Generates a JWT string from payload.
+     *
+     * @param array $payload
+     * @return string
+     */
+    private static function generateToken(array $payload): string
+    {
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
+        $body = json_encode($payload);
+
+        Logging::getInstance()->add(
+            Logging::LOG_TYPE_AUTHORISATION,
+            "Token created for user ID " . ($payload['UserID'] ?? 'unknown')
+        );
+
+        $base64UrlHeader = self::base64url_encode($header);
+        $base64UrlBody = self::base64url_encode($body);
+
+        $signature = hash_hmac('sha256', $base64UrlHeader . '.' . $base64UrlBody, self::generateSecret(), true);
+        $base64UrlSignature = self::base64url_encode($signature);
+
+        return $base64UrlHeader . '.' . $base64UrlBody . '.' . $base64UrlSignature;
+    }
+
+    /**
+     * Validates a JWT string.
+     *
+     * @param string $jwt
+     * @return array|null
+     */
+    public static function validateToken(string $jwt): ?array
+    {
+        [$header, $payload, $signatureProvided] = explode('.', $jwt);
+
+        $decodedHeader = base64_decode($header);
+        $decodedPayload = base64_decode($payload);
+
+        $expiration = json_decode($decodedPayload)->exp ?? null;
+        $tokenExpired = $expiration === null || ($expiration - time()) < 0;
+
+        $base64UrlHeader = self::base64url_encode($decodedHeader);
+        $base64UrlPayload = self::base64url_encode($decodedPayload);
+        $signature = hash_hmac('sha256', $base64UrlHeader . '.' . $base64UrlPayload, self::generateSecret(), true);
+        $base64UrlSignature = self::base64url_encode($signature);
+
+        if ($base64UrlSignature === $signatureProvided && (!$tokenExpired || Env::get("TOKEN_EXPIRED_IN_S") === null)) {
+            return json_decode($decodedPayload, true);
+        }
+
+        return null;
+    }
+
+    /**
+     * Encodes a string to base64 URL format.
+     *
+     * @param string $str
+     * @return string
+     */
+    private static function base64url_encode(string $str): string
+    {
+        return rtrim(strtr(base64_encode($str), '+/', '-_'), '=');
+    }
+
+    /**
+     * Generates a secret key based on server environment.
+     *
+     * @return string
+     */
+    private static function generateSecret(): string
+    {
+        return hash('sha256', $_SERVER['SERVER_NAME'] . $_SERVER['SERVER_ADDR'] . $_SERVER['DOCUMENT_ROOT']);
+    }
+
+    /**
+     * Retrieves the Authorization header from the request.
+     *
+     * @return string|null
+     */
+    private static function getAuthorizationHeader(): ?string
+    {
+        return $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['Authorization'] ?? (
+            function_exists('apache_request_headers') ?
+            (array_change_key_case(apache_request_headers(), CASE_LOWER)['authorization'] ?? null) : null
+        );
+    }
+
+    /**
+     * Extracts Bearer token from Authorization header.
+     *
+     * @return string|null
+     */
+    private static function getBearerToken(): ?string
+    {
+        $header = self::getAuthorizationHeader();
+        return (preg_match('/Bearer\s(\S+)/', $header ?? '', $matches)) ? $matches[1] : null;
     }
 }

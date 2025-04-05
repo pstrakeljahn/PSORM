@@ -9,90 +9,188 @@ use PS\Core\Logging\Logging;
 
 require_once '../lib/core/init.php';
 
-try {
-    $loggedIn = false;
-    $request = Request::getInstance();
-    $sessionInstance = Session::getInstance($request->segments[$request->apiIndex + 2] === Request::TYPE_LOGIN);
+class ApiController
+{
+    /**
+     * Handles the entire API request lifecycle, including routing, session validation,
+     * and formatting the response.
+     *
+     * @return void
+     */
+    public function handle(): void
+    {
+        try {
+            $request = Request::getInstance();
+            $segmentType = $request->segments[$request->apiIndex + 2] ?? null;
 
-    $loggedIn = $sessionInstance->getLoggedIn();
+            $sessionInstance = Session::getInstance($segmentType === Request::TYPE_LOGIN);
+            $loggedIn = $sessionInstance->getLoggedIn();
 
-    if (!$loggedIn && !in_array($request->segments[$request->apiIndex + 2], [Request::TYPE_LOGIN, Request::TYPE_REFRESH]) && $request->httpMethod !== 'OPTIONS') {
-        throw new \Exception('Not logged in');
-    }
-    $error = null;
-    $status = null;
-    $data = null;
-    $additionalMeta = [];
-    if (count($request->segments) >= $request->apiIndex + 3) {
-        switch ($request->segments[$request->apiIndex + 2]) {
-            case Request::TYPE_OBJ:
-                if (isset($request->segments[$request->apiIndex + 3])) {
-                    $objectName = $request->segments[$request->apiIndex + 3];
-                    if (isset($request->segments[$request->apiIndex + 4])) {
-                        $objectID = $request->segments[$request->apiIndex + 4];
-                        if ($request->httpMethod === 'GET') {
-                            $data = ApiHelper::findObject($objectName, $objectID);
-                        } else if ($request->httpMethod === 'PATCH') {
-                            $data = ApiHelper::saveObject($objectName, $objectID);
-                        }
-                    } else {
-                        if ($request->httpMethod === 'GET') {
-                            $pageSize = ApiHelper::DEFAULT_PAGESIZE;
-                            $page = 1;
-                            if (isset($request->parameters['_pageSize'])) {
-                                $pageSize = (int)$request->parameters['_pageSize'];
-                            }
-                            if (isset($request->parameters['_page'])) {
-                                $page = (int)$request->parameters['_page'];
-                            }
-                            if ($pageSize === -1) {
-                                $page = 1;
-                            }
-                            $additionalMeta['page'] = $page;
-                            $additionalMeta['pageSize'] = $pageSize;
-                            $data = ApiHelper::findObject($objectName, null, $page, $pageSize);
-                            $additionalMeta['totalCount'] = count($data);
-                        } else if ($request->httpMethod === 'POST') {
-                            $data = ApiHelper::saveObject($objectName);
-                            $status = Response::CREATED;
-                        } else if ($request->httpMethod === 'OPTIONS') {
-                            $peerClass = "ObjectPeer\\" . $objectName . "Peer";
-                            $data = $peerClass::OPTIONS;
-                            $status = Response::STATUS_OK;
-                        }
-                    }
-                }
-                break;
-            case Request::TYPE_LOGIN:
-                $data = $sessionInstance->login();
-                break;
-            case Request::TYPE_REFRESH:
-                $data = $sessionInstance->refresh();
-                break;
-            case Request::TYPE_LOGOUT:
-                $data = $sessionInstance->logout();
-                break;
-            case Request::TYPE_MOD:
-            case Request::TYPE_CORE:
-                $data = Endpoint::getEndpointData();
-                break;
+            if (
+                !$loggedIn &&
+                !in_array($segmentType, [Request::TYPE_LOGIN, Request::TYPE_REFRESH]) &&
+                $request->httpMethod !== 'OPTIONS'
+            ) {
+                throw new \Exception('Not logged in');
+            }
+
+            $data = null;
+            $status = null;
+            $error = null;
+            $additionalMeta = [];
+
+            if (!$segmentType) {
+                throw new \Exception('Missing request type');
+            }
+
+            $data = $this->handleRequestType($segmentType, $request, $sessionInstance, $status, $additionalMeta);
+
+            (new Response)
+                ->setError($error)
+                ->setData($data)
+                ->setStatus($status ?? ($data === null ? Response::NOT_FOUND : Response::STATUS_OK))
+                ->getResponse($additionalMeta);
+        } catch (\Exception $e) {
+            $this->handleException($e, $loggedIn);
         }
-        (new Response)
-            ->setError($error)
-            ->setData($data)
-            ->setStatus($status !== null ? $status : ($data === null ? Response::NOT_FOUND : Response::STATUS_OK))
-            ->getResponse($additionalMeta);
     }
-} catch (\Exception $e) {
-    $log = new Logging;
-    $log->add(Logging::LOG_TYPE_API, $e->getMessage());
-    (new Response)
-        ->setError($e->getMessage())
-        ->setStatus($loggedIn ? Response::SERVER_ERROR : Response::UNAUTHORIZED)
-        ->setDebug($loggedIn ? [
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => $e->getTrace()
-        ] : [])
-        ->getResponse();
+
+    /**
+     * Handles the routing based on request type segment.
+     *
+     * @param string $type
+     * @param Request $request
+     * @param Session $sessionInstance
+     * @param string|null $status Reference for HTTP response status
+     * @param array $meta Reference for additional metadata in the response
+     *
+     * @return mixed
+     * @throws \Exception
+     */
+    private function handleRequestType(string $type, Request $request, Session $sessionInstance, ?string &$status, array &$meta): mixed
+    {
+        return match ($type) {
+            Request::TYPE_OBJ     => $this->handleObjectRequest($request, $status, $meta),
+            Request::TYPE_LOGIN   => $sessionInstance->login(),
+            Request::TYPE_REFRESH => $sessionInstance->refresh(),
+            Request::TYPE_LOGOUT  => $sessionInstance->logout(),
+            Request::TYPE_MOD,
+            Request::TYPE_CORE    => Endpoint::getEndpointData(),
+            default               => throw new \Exception("Unknown request type: {$type}")
+        };
+    }
+
+    /**
+     * Handles all object-related requests like GET, POST, PATCH, and OPTIONS.
+     *
+     * @param Request $request
+     * @param string|null $status
+     * @param array $meta
+     *
+     * @return array|null
+     * @throws \Exception
+     */
+    private function handleObjectRequest(Request $request, ?string &$status, array &$meta): ?array
+    {
+        $objectName = $request->segments[$request->apiIndex + 3] ?? null;
+        $objectID = $request->segments[$request->apiIndex + 4] ?? null;
+
+        if (!$objectName) {
+            throw new \Exception('Missing object name');
+        }
+
+        return match ($request->httpMethod) {
+            'GET'     => $this->handleObjectGet($objectName, $objectID, $request, $meta),
+            'POST'    => $this->handleObjectPost($objectName, $status),
+            'PATCH'   => $objectID ? ApiHelper::saveObject($objectName, $objectID) : null,
+            'OPTIONS' => $this->handleObjectOptions($objectName, $status),
+            default   => throw new \Exception('Unsupported HTTP method'),
+        };
+    }
+
+    /**
+     * Handles GET requests for objects, with support for pagination and single-object fetch.
+     *
+     * @param string $objectName
+     * @param string|null $objectID
+     * @param Request $request
+     * @param array $meta
+     *
+     * @return array|null
+     */
+    private function handleObjectGet(string $objectName, ?string $objectID, Request $request, array &$meta): ?array
+    {
+        if ($objectID) {
+            return ApiHelper::findObject($objectName, $objectID);
+        }
+
+        $pageSize = (int)($request->parameters['_pageSize'] ?? ApiHelper::DEFAULT_PAGESIZE);
+        $page = (int)($request->parameters['_page'] ?? 1);
+        if ($pageSize === -1) {
+            $page = 1;
+        }
+
+        $meta['page'] = $page;
+        $meta['pageSize'] = $pageSize;
+
+        $data = ApiHelper::findObject($objectName, null, $page, $pageSize);
+        $meta['totalCount'] = count($data);
+
+        return $data;
+    }
+
+    /**
+     * Handles POST requests for creating new objects.
+     *
+     * @param string $objectName
+     * @param string $status
+     *
+     * @return array
+     */
+    private function handleObjectPost(string $objectName, string &$status): array
+    {
+        $status = (string)Response::CREATED;
+        return ApiHelper::saveObject($objectName);
+    }
+
+    /**
+     * Handles OPTIONS requests to return allowed operations for an object.
+     *
+     * @param string $objectName
+     * @param string $status
+     *
+     * @return array
+     */
+    private function handleObjectOptions(string $objectName, string &$status): array
+    {
+        $peerClass = "ObjectPeer\\{$objectName}Peer";
+        $status = (string)Response::STATUS_OK;
+        return $peerClass::OPTIONS;
+    }
+
+    /**
+     * Handles and logs exceptions, sending back a structured error response.
+     *
+     * @param \Throwable $e
+     * @param bool $loggedIn
+     *
+     * @return void
+     */
+    private function handleException(\Throwable $e, bool $loggedIn): void
+    {
+        $log = new Logging;
+        $log->add(Logging::LOG_TYPE_API, $e->getMessage());
+
+        (new Response)
+            ->setError($e->getMessage())
+            ->setStatus($loggedIn ? Response::SERVER_ERROR : Response::UNAUTHORIZED)
+            ->setDebug($loggedIn ? [
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+                'trace' => $e->getTrace()
+            ] : [])
+            ->getResponse();
+    }
 }
+
+(new ApiController)->handle();

@@ -7,12 +7,12 @@ use PS\Core\Database\Entity;
 
 class Template extends Entity
 {
-    protected function setEntitname(): string
+    protected function setEntityName(): string
     {
         return 'Template';
     }
 
-    protected function setTabelName(): string
+    protected function setTableName(): string
     {
         return 'templates';
     }

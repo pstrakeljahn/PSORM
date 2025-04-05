@@ -10,12 +10,12 @@ class SessionEntity extends Entity
 {
     public bool $withoutMeta = true;
 
-    protected function setEntitname(): string
+    protected function setEntityName(): string
     {
         return 'Session';
     }
 
-    protected function setTabelName(): string
+    protected function setTableName(): string
     {
         return 'sessions';
     }

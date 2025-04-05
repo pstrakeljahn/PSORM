@@ -7,12 +7,12 @@ use PS\Core\Database\Entity;
 
 class UserEntity extends Entity
 {
-    protected function setEntitname(): string
+    protected function setEntityName(): string
     {
         return 'User';
     }
 
-    protected function setTabelName(): string
+    protected function setTableName(): string
     {
         return 'users';
     }
