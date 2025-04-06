@@ -35,7 +35,7 @@ class Criteria
      *
      * @return self
      */
-    public static function getInstace(): self
+    public static function getInstance(): self
     {
         return new self();
     }

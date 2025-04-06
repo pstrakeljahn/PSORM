@@ -6,55 +6,83 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use Config;
 use PS\Core\Logging\Logging;
 
-class BackendStructureCreationStep extends BuildStep
+/**
+ * Step responsible for creating backend folder and file structure.
+ */
+final class BackendStructureCreationStep extends BuildStep
 {
+    /**
+     * @return string
+     */
     protected function setStepName(): string
     {
         return 'Creating File/Folder structure';
     }
 
+    /**
+     * @return string
+     */
     protected function setDescription(): string
     {
-        return 'Creating neccessary files and fodlers.';
+        return 'Creating necessary files and folders.';
     }
 
+    /**
+     * Executes the step: creates directories and log files.
+     *
+     * @return bool True if successful
+     */
     public function run(): bool
     {
+        /** @var array<string, array<int, string>|null> $structure */
         $structure = [
-            'build' => ['customEndpoints', 'peerBasic', 'basic'],
-            'logs' => ['mails'],
-            'files' => null,
-            'temp' => null
+            'ci'                                 => null,
+            'build'                              => ['customEndpoints', 'peerBasic', 'basic'],
+            basename(Config::LOG_FOLDER)         => ['mails'],
+            basename(Config::FILES_FOLDER)       => null,
+            basename(Config::TEMP_FOLDER)        => null,
         ];
 
         return self::createFolders($structure) && self::createLogFiles();
     }
 
-    private static function createFolders(array $structure)
+    /**
+     * Creates the required directory structure recursively.
+     *
+     * @param array<string, array<int, string>|null> $structure
+     * @return bool
+     */
+    private static function createFolders(array $structure): bool
     {
         $basePath = Config::BASE_PATH;
+
         foreach ($structure as $folder => $subfolders) {
             $path = $basePath . $folder;
-            if (!is_dir($path)) {
-                if (!mkdir($path, 0777, true)) {
-                    return false;
-                }
+
+            if (!is_dir($path) && !mkdir($path, 0777, true)) {
+                return false;
             }
+
             if (is_array($subfolders)) {
                 foreach ($subfolders as $subfolder) {
                     $subfolderPath = $path . DIRECTORY_SEPARATOR . $subfolder;
-                    if (!is_dir($subfolderPath)) {
-                        if (!mkdir($subfolderPath, 0777, true)) {
-                            return false;
-                        }
+
+                    if (!is_dir($subfolderPath) && !mkdir($subfolderPath, 0777, true)) {
+                        return false;
                     }
                 }
             }
         }
+
         return true;
     }
 
-    private static function createLogFiles()
+    /**
+     * Creates default log files via Logging helper.
+     *
+     * @return bool
+     */
+    private static function createLogFiles(): bool
     {
         return Logging::generateFiles();
     }

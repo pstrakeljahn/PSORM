@@ -98,7 +98,7 @@ class ApiHelper
     private static function buildCriteria(string $peerClass, ?int $page, ?int $pageSize): Criteria
     {
         $request = Request::getInstance();
-        $criteria = Criteria::getInstace();
+        $criteria = Criteria::getInstance();
 
         foreach ($request->parameters as $key => $value) {
             if (!in_array($key, [...$peerClass::API_READABLE, '_page', '_pageSize'])) {

@@ -15,14 +15,11 @@ class PhpStanHelper
     /** @var string Path to PHPStan binary */
     private string $phpStanBin;
 
-    /** @var string Analysis level (0–9, default: 5) */
-    public string $level = '5';
-
-    /** @var string Path to analyze */
-    public string $path = Config::BASE_PATH;
+    /** @var int Analysis level (0–9, default: 5) */
+    private int $level = 5;
 
     /** @var string Path to autoload file */
-    public string $autoloadFile = Config::BASE_PATH . 'lib/core/init.php';
+    private string $autoloadFile;
 
     /**
      * PhpStanHelper constructor.
@@ -32,6 +29,16 @@ class PhpStanHelper
     public function __construct()
     {
         $this->phpStanBin = Config::BASE_PATH . 'lib/core/vendor/bin/phpstan';
+        $this->autoloadFile = Config::BASE_PATH . 'lib/core/init.php';
+    }
+
+    public function setLevel(int $level): self
+    {
+        if ($level < 0 || $level > 9) {
+            throw new \Exception("Analysis level has to be between 0 and 9.");
+        }
+        $this->level = $level;
+        return $this;
     }
 
     /**
@@ -42,7 +49,7 @@ class PhpStanHelper
     public function runAnalysis(): void
     {
         $phpStan    = escapeshellcmd(realpath($this->phpStanBin));
-        $level      = escapeshellarg($this->level);
+        $level      = escapeshellarg((string)$this->level);
         $autoload   = escapeshellarg(realpath($this->autoloadFile));
         $pathsArray = $this->getFilePaths();
 
@@ -66,6 +73,7 @@ class PhpStanHelper
     private function getFilePaths(): array
     {
         $excluded = [
+            realpath(Config::BASE_PATH . 'ci/'),
             realpath(Config::TEMP_FOLDER),
             realpath(Config::LOG_FOLDER),
             realpath(Config::FILES_FOLDER),

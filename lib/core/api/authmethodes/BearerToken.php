@@ -58,7 +58,7 @@ class BearerToken implements AuthMethodeInterface
     public function getUser(): ?User
     {
         $users = UserPeer::find(
-            Criteria::getInstace()
+            Criteria::getInstance()
                 ->add(UserPeer::USERNAME, $this->token['username'])
                 ->addLimit(0, 1)
         );
@@ -128,7 +128,7 @@ class BearerToken implements AuthMethodeInterface
         }
 
         $sessions = SessionPeer::find(
-            Criteria::getInstace()->add(SessionPeer::USERID, $this->token['UserID'])
+            Criteria::getInstance()->add(SessionPeer::USERID, $this->token['UserID'])
         );
 
         foreach ($sessions as $session) {
@@ -156,7 +156,7 @@ class BearerToken implements AuthMethodeInterface
         }
 
         $sessions = SessionPeer::find(
-            Criteria::getInstace()
+            Criteria::getInstance()
                 ->add(SessionPeer::USERID, $this->token['UserID'])
                 ->add(SessionPeer::REFRESHTOKEN, $refreshToken)
         );
@@ -183,7 +183,7 @@ class BearerToken implements AuthMethodeInterface
     private static function checkPassword(array $params): ?User
     {
         $users = UserPeer::find(
-            Criteria::getInstace()
+            Criteria::getInstance()
                 ->add(UserPeer::USERNAME, $params['username'])
                 ->addLimit(0, 1)
         );
@@ -210,7 +210,7 @@ class BearerToken implements AuthMethodeInterface
     private function createSession(string $refreshToken, User $user): void
     {
         $sessions = SessionPeer::find(
-            Criteria::getInstace()->add(SessionPeer::USERID, $user->getID())
+            Criteria::getInstance()->add(SessionPeer::USERID, $user->getID())
         );
 
         $session = $sessions[0] ?? new Session();

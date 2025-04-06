@@ -9,10 +9,16 @@ use PS\Core\Database\DBConnector;
 use PS\Core\Database\Entity;
 use PS\Core\Helper\Env;
 
-class PrepareDatabase extends BuildStep
+/**
+ * Step that prepares the database by creating or updating tables based on entities.
+ */
+final class PrepareDatabase extends BuildStep
 {
     private DBConnector $db;
+
+    /** @var array<string, array<string, string>> */
     private array $fkConstraints = [];
+
     protected function setStepName(): string
     {
         return 'Prepare Database';
@@ -20,127 +26,170 @@ class PrepareDatabase extends BuildStep
 
     protected function setDescription(): string
     {
-        return 'Creates database tables';
+        return 'Creates or updates database tables and foreign key constraints.';
     }
 
     public function run(): bool
     {
-        $this->checkDatabase();
+        $this->ensureDatabaseExists();
+
         $this->db = new DBConnector();
+
         foreach (EntityHelper::loadEntityClasses() as $entityInstance) {
             if (!$this->tableExists($entityInstance->table)) {
                 $this->createTable($entityInstance);
             } else {
                 $this->alterTable($entityInstance);
             }
+
             $this->fkConstraints[$entityInstance->table] = $entityInstance->getFKConstraints();
         }
-        $this->executeFKConstraints();
+
+        $this->applyForeignKeyConstraints();
+
         return true;
     }
 
-    private function checkDatabase()
+    private function ensureDatabaseExists(): void
     {
         $db = new DBConnector(true);
-        $res = $db->executeQuery("SHOW DATABASES LIKE '" . Env::get("DB_NAME") . "'");
-        if (!count($res)) {
-            $db->executeQuery("CREATE DATABASE `" .  Env::get("DB_NAME") . "` CHARACTER SET " . Env::get("DB_CHARSET") . " COLLATE " . Env::get("DB_CHARSET") . "_general_ci");
+        $dbName = Env::get("DB_NAME") ?? '';
+        $charset = Env::get("DB_CHARSET") ?? 'utf8mb4';
+
+        $result = $db->executeQuery("SHOW DATABASES LIKE '{$dbName}'");
+        if (empty($result)) {
+            $sql = sprintf(
+                "CREATE DATABASE `%s` CHARACTER SET %s COLLATE %s_general_ci",
+                $dbName,
+                $charset,
+                $charset
+            );
+            $db->executeQuery($sql);
         }
     }
 
     private function tableExists(string $tableName): bool
     {
-        return count($this->db->executeQuery("SHOW TABLES LIKE '" . $tableName . "'")) > 0;
+        $result = $this->db->executeQuery("SHOW TABLES LIKE '{$tableName}'");
+        return !empty($result);
     }
 
-    private function createTable(Entity $entityInstance): void
+    private function createTable(Entity $entity): void
     {
-        $this->db->executeQuery($entityInstance->getCreateTableSQL());
-        echo "\t- Table '$entityInstance->table' created\n";
+        $this->db->executeQuery($entity->getCreateTableSQL());
+        echo "\t- Table '{$entity->table}' created\n";
     }
 
-    private function alterTable(Entity $entityInstance): void
+    private function alterTable(Entity $entity): void
     {
-        $columnsQuery = "SHOW COLUMNS FROM `$entityInstance->table`";
-        $columnsResult = $this->db->executeQuery($columnsQuery);
+        $existingColumns = $this->getCurrentTableColumns($entity->table);
+        $desiredColumns = $this->getDesiredColumns($entity);
 
-        $existingColumns = [];
-        foreach ($columnsResult as $row) {
-            $existingColumns[$row['Field']] = $row;
-        }
+        $alterStatements = [];
 
-        $desiredColumns = self::getDesiredColumns($entityInstance);
-
-        $alterTableQueries = [];
-
-        foreach ($desiredColumns as $column => $definition) {
-            if (isset($existingColumns[$column])) {
-                if (!$this->compareColumnDefinition($existingColumns[$column], $definition)) {
-                    $alterTableQueries[] = "MODIFY COLUMN `$column` $definition";
+        foreach ($desiredColumns as $name => $definition) {
+            if (isset($existingColumns[$name])) {
+                if (!$this->compareColumnDefinition($existingColumns[$name], $definition)) {
+                    $alterStatements[] = "MODIFY COLUMN `$name` $definition";
                 }
             } else {
-                $alterTableQueries[] = "ADD COLUMN `$column` $definition";
+                $alterStatements[] = "ADD COLUMN `$name` $definition";
             }
         }
 
-        foreach ($existingColumns as $column => $row) {
-            if (!isset($desiredColumns[$column])) {
-                $alterTableQueries[] = "DROP COLUMN `$column`";
+        foreach ($existingColumns as $name => $_) {
+            if (!isset($desiredColumns[$name])) {
+                $alterStatements[] = "DROP COLUMN `$name`";
             }
         }
 
-        if (!empty($alterTableQueries)) {
-            $alterTableSQL = "ALTER TABLE `$entityInstance->table` " . implode(', ', $alterTableQueries);
-            $this->db->executeQuery($alterTableSQL);
+        if (!empty($alterStatements)) {
+            $sql = sprintf("ALTER TABLE `%s` %s", $entity->table, implode(', ', $alterStatements));
+            $this->db->executeQuery($sql);
         }
     }
 
-    private static function getDesiredColumns($entityInstance): array
+    /**
+     * @param string $table
+     * @return array<string, array<string, string>>
+     */
+    private function getCurrentTableColumns(string $table): array
     {
-        $fields = $entityInstance->_getFields();
-        $returnArray = [];
-        foreach ($fields as $field) {
-            $returnArray[$field->name] = str_replace("`$field->name` ", "", $field->getMySQLDefinition());
+        $rows = $this->db->executeQuery("SHOW COLUMNS FROM `$table`");
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['Field']] = $row;
         }
-        return $returnArray;
+
+        return $result;
     }
 
+    /**
+     * @param Entity $entity
+     * @return array<string, string>
+     */
+    private function getDesiredColumns(Entity $entity): array
+    {
+        $result = [];
+
+        foreach ($entity->_getFields() as $field) {
+            $result[$field->name] = str_replace("`{$field->name}` ", '', $field->getMySQLDefinition());
+        }
+
+        return $result;
+    }
+
+    /**
+     * @param array $existingColumn
+     * @param string $desiredDefinition
+     * @return bool
+     */
     private function compareColumnDefinition(array $existingColumn, string $desiredDefinition): bool
     {
-        $currentDefinition = $existingColumn['Type'];
+        $sql = strtolower($existingColumn['Type']);
+
         if ($existingColumn['Null'] === 'NO') {
-            $currentDefinition .= ' NOT NULL';
-        }
-        if (!empty($existingColumn['Default'])) {
-            $currentDefinition .= " DEFAULT '{$existingColumn['Default']}'";
-        }
-        if ($existingColumn['Extra']) {
-            $currentDefinition .= ' ' . $existingColumn['Extra'];
+            $sql .= ' not null';
         }
 
-        return strtolower(trim($currentDefinition)) === strtolower(trim($desiredDefinition));
+        if (!is_null($existingColumn['Default'])) {
+            $sql .= " default '" . $existingColumn['Default'] . "'";
+        }
+
+        if (!empty($existingColumn['Extra'])) {
+            $sql .= ' ' . strtolower($existingColumn['Extra']);
+        }
+
+        return trim($sql) === strtolower(trim($desiredDefinition));
     }
 
-    private function executeFKConstraints()
+    private function applyForeignKeyConstraints(): void
     {
-        foreach ($this->fkConstraints as $tableName => $constraint) {
-            foreach ($constraint as $fk => $query) {
-                $fkName = sprintf("fk_%s_%s", $tableName, $fk);
-                $res = $this->db->executeQuery(
-                    sprintf(
-                        "SELECT CONSTRAINT_NAME 
-                        FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS 
-                        WHERE CONSTRAINT_SCHEMA = '%s' 
-                        AND TABLE_NAME = '%s' 
-                        AND CONSTRAINT_NAME = '%s'",
-                        Env::get("DB_NAME"),
-                        $tableName,
-                        $fkName
-                    )
-                );
-                if (count($res)) {
-                    continue 2;
+        $dbName = Env::get("DB_NAME");
+
+        foreach ($this->fkConstraints as $table => $constraints) {
+            foreach ($constraints as $fkKey => $query) {
+                $fkName = sprintf("fk_%s_%s", $table, $fkKey);
+
+                $checkQuery = "
+                    SELECT CONSTRAINT_NAME 
+                    FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS 
+                    WHERE CONSTRAINT_SCHEMA = :schema 
+                    AND TABLE_NAME = :table 
+                    AND CONSTRAINT_NAME = :fk
+                ";
+
+                $result = $this->db->executeQuery($checkQuery, [
+                    'schema' => $dbName,
+                    'table' => $table,
+                    'fk' => $fkName
+                ]);
+
+                if (!empty($result)) {
+                    continue;
                 }
+
                 $this->db->executeQuery($query);
             }
         }

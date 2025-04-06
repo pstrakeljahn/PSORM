@@ -6,46 +6,67 @@ use PS\Core\_devtools\Abstracts\BuildStep;
 use Config;
 use PS\Core\Api\Abstracts\EndpointInterface;
 
-class GetEndpoints extends BuildStep
+/**
+ * Step to load all custom endpoint classes from resolver files
+ * and generate a central endpoint mapping.
+ */
+final class GetEndpoints extends BuildStep
 {
+    /**
+     * @return string
+     */
     protected function setStepName(): string
     {
         return 'Fetching Custom Endpoints';
     }
 
+    /**
+     * @return string
+     */
     protected function setDescription(): string
     {
         return 'Load every mod-Endpoint from every package';
     }
 
+    /**
+     * Scans resolver files and writes all endpoints to build/customEndpoints/endpoints.php.
+     *
+     * @return bool
+     */
     public function run(): bool
     {
-        $base_dir = Config::BASE_PATH . 'lib/';
-        $arrFiles = [
-            ...glob($base_dir . 'core/src/api/resolver/*.php'),
-            ...glob($base_dir . 'packages/*/api/resolver/*.php')
-        ];
+        $resolverFiles = array_merge(
+            glob(Config::BASE_PATH . 'lib/core/src/api/resolver/*.php') ?: [],
+            glob(Config::BASE_PATH . 'lib/packages/*/api/resolver/*.php') ?: []
+        );
 
-        $mappingEndpoints = [];
+        /** @var array<string, array<string, mixed>> $endpointMap */
+        $endpointMap = [];
 
-        foreach ($arrFiles as $file) {
-            $arrEndpoints = require($file); {
-                foreach ($arrEndpoints as $endpoint) {
-                    if (in_array(EndpointInterface::class, class_implements($endpoint))) {
-                        $definition = $endpoint::_define();
-                        $mappingEndpoints[$definition->url] = [
-                            'class' => $endpoint,
-                        ];
-                        foreach ($definition->allowedMethodes as $method) {
-                            $mappingEndpoints[$definition->url][strtoupper($method)] = [];
-                            if (in_array(strtoupper($method), array_keys($definition->requiredParamsByMethod))) {
-                                $mappingEndpoints[$definition->url][strtoupper($method)] = $definition->requiredParamsByMethod[strtoupper($method)];
-                            }
-                        }
-                    }
+        foreach ($resolverFiles as $file) {
+            /** @var array<class-string<EndpointInterface>> $endpoints */
+            $endpoints = require $file;
+
+            foreach ($endpoints as $endpointClass) {
+                if (!class_exists($endpointClass) || !in_array(EndpointInterface::class, class_implements($endpointClass), true)) {
+                    continue;
+                }
+
+                $definition = $endpointClass::_define();
+                $url = $definition->url;
+
+                $endpointMap[$url] = ['class' => $endpointClass];
+
+                foreach ($definition->allowedMethodes as $method) {
+                    $methodUpper = strtoupper($method);
+                    $endpointMap[$url][$methodUpper] = $definition->requiredParamsByMethod[$methodUpper] ?? [];
                 }
             }
         }
-        return file_put_contents(Config::BASE_PATH . 'build/customEndpoints/endpoints.php', "<?php\n\n return " . var_export($mappingEndpoints, true) . ";");
+
+        $outputPath = Config::BASE_PATH . 'build/customEndpoints/endpoints.php';
+        $exported = "<?php\n\nreturn " . var_export($endpointMap, true) . ";\n";
+
+        return file_put_contents($outputPath, $exported) !== false;
     }
 }
