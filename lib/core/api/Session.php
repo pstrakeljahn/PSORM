@@ -77,13 +77,13 @@ class Session
      *
      * @return bool
      */
-    public function getLoggedIn(): bool
+    public function getLoggedIn($additionalData = null): bool
     {
         if ($this->isServiceInstance) {
             return true;
         }
 
-        return $this->authInstance?->getLoggedIn() ?? false;
+        return $this->authInstance?->getLoggedIn($additionalData) ?? false;
     }
 
     /**

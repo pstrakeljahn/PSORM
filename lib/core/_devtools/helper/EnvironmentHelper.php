@@ -34,6 +34,7 @@ class EnvironmentHelper
         'MAIL_PASS',
         'MAIL_PORT',
         'MAIL_FROM_NAME',
+        'GEMINI_KEY'
     ];
 
     /**

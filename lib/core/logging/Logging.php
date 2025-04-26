@@ -19,6 +19,7 @@ class Logging
     public const LOG_TYPE_DB            = 'db';
     public const LOG_TYPE_AUTHORISATION = 'auth';
     public const LOG_TYPE_MAIL          = 'mail';
+    public const LOG_TYPE_CHATBOT       = 'chatbot';
 
     /** @var string[] List of known log types for file creation */
     private const ARRAY_LOG_TYPES = [
@@ -29,6 +30,7 @@ class Logging
         self::LOG_TYPE_DB,
         self::LOG_TYPE_AUTHORISATION,
         self::LOG_TYPE_MAIL,
+        self::LOG_TYPE_CHATBOT
     ];
 
     /** @var string Base log directory */

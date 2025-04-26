@@ -36,8 +36,8 @@ class Request
     /** @var string|null Origin header if present */
     public readonly ?string $origin;
 
-    /** @var string Request type (e.g. obj, login) */
-    public readonly string $requestType;
+    /** @var string|null Request type (e.g. obj, login) */
+    public readonly ?string $requestType;
 
     /** @var string API version (e.g. v1) */
     public readonly string $apiVersion;
@@ -71,13 +71,21 @@ class Request
             throw new \Exception('Origin is not allowed');
         }
 
-        $this->segments = $this->parseSegments($this->requestUri);
-        $this->apiIndex = $this->locateApiIndex($this->segments);
-        $this->apiVersion = $this->segments[$this->apiIndex + 1] ?? '';
-        $this->requestType = $this->detectRequestType($this->segments[$this->apiIndex + 2] ?? '');
-
-        $this->parameters = $this->extractParameters($this->httpMethod);
-        $this->file = file_get_contents('php://input');
+        if ($this->requestUri !== "") {
+            $this->segments = $this->parseSegments($this->requestUri);
+            $this->apiIndex = $this->locateApiIndex($this->segments);
+            $this->apiVersion = $this->segments[$this->apiIndex + 1] ?? '';
+            $this->requestType = $this->detectRequestType($this->segments[$this->apiIndex + 2] ?? '');
+            $this->parameters = $this->extractParameters($this->httpMethod);
+            $this->file = file_get_contents('php://input');
+        } else {
+            $this->segments = [];
+            $this->apiIndex = 0;
+            $this->apiVersion = "";
+            $this->requestType = null;
+            $this->parameters = [];
+            $this->file = null;
+        }
     }
 
     /**

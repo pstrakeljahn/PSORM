@@ -75,9 +75,13 @@ class BearerToken implements AuthMethodeInterface
      *
      * @return bool
      */
-    public function getLoggedIn(): bool
+    public function getLoggedIn($additionalData = null): bool
     {
-        return isset($this->token['UserID']);
+        if ($additionalData === null) {
+            return isset($this->token['UserID']);
+        }
+        $token = self::validateToken($additionalData);
+        return isset($token['UserID']);
     }
 
     /**
@@ -345,7 +349,7 @@ class BearerToken implements AuthMethodeInterface
      */
     private static function generateSecret(): string
     {
-        return hash('sha256', $_SERVER['SERVER_NAME'] . $_SERVER['SERVER_ADDR'] . $_SERVER['DOCUMENT_ROOT']);
+        return hash('sha256', "gW7pXv29LmQzR5Tb1AyFsd8eJkUqNv3HpoCxrVtYZ4BWMa1lj9squPfOEgH2KnDX");
     }
 
     /**
