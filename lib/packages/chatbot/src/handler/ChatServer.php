@@ -1,19 +1,24 @@
 <?php
 
-namespace PS\Core\Ai;
+namespace PS\Package\Chatbot\Handler;
 
 use ObjectPeer\UserPeer;
 use PS\Core\Api\Session;
+use PS\Core\Helper\CliOutputHelper;
 use PS\Core\Helper\WebSocketServer;
 use PS\Core\Logging\Logging;
 use Workerman\Connection\TcpConnection;
 
 class ChatServer
 {
-    private const INIT_COMMAND = "Initial context: You are a chatbot. You can use emojis to highlight things. From now on, the input of the real user comes.";
+    private const INIT_COMMAND = "Initial context: You are a chatbot. You can use emojis to highlight things. Introduce yourself.";
     private WebSocketServer $server;
     private Logging $logInstance;
+    /** @var ChatSession[] $initalSessions  */
+    private array $initalSessions = [];
+    /** @var ChatSession[] $sessions  */
     private array $sessions = [];
+
     private array $connectionIDToUserID = [];
 
     /**
@@ -26,7 +31,7 @@ class ChatServer
     public function __construct(string $host = '0.0.0.0', int $port = 2346)
     {
         $this->server = new WebSocketServer($host, $port);
-        $this->logInstance = Logging::getInstance();
+        $this->logInstance = new Logging();
 
         $this->server->setOnConnect(fn(TcpConnection $connection) => $this->handleConnect($connection));
         $this->server->setOnMessage(fn(TcpConnection $connection, $data) => $this->handleMessage($connection, $data));
@@ -50,6 +55,23 @@ class ChatServer
     {
         $message = "New connection {$connection->id}: {$connection->getRemoteAddress()}";
         $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, $message, true);
+        $this->initalSessions[$connection->id] = new ChatSession();
+        $this->initalSessions[$connection->id]->addUserMessage(self::INIT_COMMAND);
+
+        $gemini = new GeminiHandler();
+        $session = $this->initalSessions[$connection->id];
+        $postData = [
+            "contents" => $session->buildGeminiPrompt()
+        ];
+        $gemini->streamGenerateContentWithData($postData, function ($chunk) use ($connection, $session) {
+            $parsedChunk = $chunk['message'] ?? null;
+            if ($parsedChunk !== null) {
+                $session->addAssistantMessage($parsedChunk);
+                $connection->send($chunk);
+                $output = str_replace("\n", "", $parsedChunk);
+                CliOutputHelper::output("AI init: '{$output}'");
+            }
+        });
     }
 
     /**
@@ -66,7 +88,9 @@ class ChatServer
             $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "Invalid data received.", true);
             $connection->send([
                 "message" => '',
-                "inProgress" => false
+                "inProgress" => false,
+                "error" => "notLoggedIn",
+                "code" => 403
             ]);
             return;
         }
@@ -78,7 +102,9 @@ class ChatServer
                 $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "User not found (ID: {$data["UserID"]})", true);
                 $connection->send([
                     "message" => '',
-                    "inProgress" => false
+                    "inProgress" => false,
+                    "error" => null,
+                    "code" => 200
                 ]);
                 return;
             }
@@ -90,19 +116,21 @@ class ChatServer
                 $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "User (ID: {$user->getID()}) is not logged in!", true);
                 $connection->send([
                     "message" => '',
-                    "inProgress" => false
+                    "inProgress" => false,
+                    "error" => null,
+                    "code" => 200
                 ]);
                 return;
             }
 
             $this->connectionIDToUserID[$connection->id] = $user->getID();
-            $this->sessions[$this->getSessionKey($connection->id)] = new ChatSession($user, self::INIT_COMMAND);
+            $this->sessions[$this->getSessionKey($connection->id)] = $this->initalSessions[$connection->id];
         }
 
         if (isset($this->connectionIDToUserID[$connection->id])) {
             $prompt = $data['message'] ?? '';
             $message = "Received (UserID {$this->connectionIDToUserID[$connection->id]}): '{$prompt}'";
-            $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, $message, true);
+            CliOutputHelper::output("Received (UserID {$this->connectionIDToUserID[$connection->id]}): '{$prompt}'");
 
             $session = $this->sessions[$this->getSessionKey($connection->id)];
             $gemini = new GeminiHandler();
@@ -120,7 +148,7 @@ class ChatServer
                         $session->addAssistantMessage($parsedChunk);
                         $connection->send($chunk);
                         $output = str_replace("\n", "", $parsedChunk);
-                        $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "AI Response (UserID {$this->connectionIDToUserID[$connection->id]}): '{$output}'", true);
+                        CliOutputHelper::output("AI Response (UserID {$this->connectionIDToUserID[$connection->id]}): '{$output}'");
                     }
                 });
             } catch (\Exception $e) {

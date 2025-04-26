@@ -78,6 +78,11 @@ abstract class Entity
         return false;
     }
 
+    protected function withoutMeta(): bool
+    {
+        return false;
+    }
+
     /**
      * Internal setup of entity structure: names, fields, metadata, etc.
      *
@@ -151,9 +156,9 @@ abstract class Entity
      * @param bool $val
      * @return $this
      */
-    public final function setWithoutMeta(bool $val): self
+    public final function setWithoutMeta(): self
     {
-        $this->withoutMeta = $val;
+        $this->withoutMeta = $this->withoutMeta();
         return $this;
     }
 

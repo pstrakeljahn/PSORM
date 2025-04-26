@@ -1,8 +1,9 @@
 <?php
 
-namespace PS\Core\Ai;
+namespace PS\Package\Chatbot\Handler;
 
 use Object\User;
+use ObjectPeer\KnowledgebitPeer;
 
 /**
  * Manages the chat session between a user and the AI,
@@ -15,26 +16,20 @@ class ChatSession
      */
     private array $messages = [];
 
+    private array $context = [];
+
     /**
      * ChatSession constructor.
      * Initializes the session with user information and an optional initial context.
      *
-     * @param User $user
      * @param string|null $initialContext
      */
-    public function __construct(User $user, ?string $initialContext = null)
+    public function __construct(?string $initialContext = null)
     {
         $this->messages[] = [
             'role' => 'user',
-            'text' => "This is the information about the user who is currently asking you: " . json_encode($user->asArray(true))
+            'text' => "INITAL CONTEXT: " . $initialContext
         ];
-
-        if ($initialContext !== null) {
-            $this->messages[] = [
-                'role' => 'user',
-                'text' => "Initial context: " . $initialContext
-            ];
-        }
     }
 
     /**
@@ -44,6 +39,7 @@ class ChatSession
      */
     public function addUserMessage(string $message): void
     {
+        $this->addKnowledge($message);
         $this->messages[] = [
             'role' => 'user',
             'text' => $message
@@ -82,5 +78,19 @@ class ChatSession
         }
 
         return $parts;
+    }
+
+    private function addKnowledge(string $message)
+    {
+        $arrBits = KnowledgebitPeer::findMostRelevantBits($message);
+        foreach ($arrBits as $bit) {
+            if (!isset($this->context[$bit->getID()])) {
+                $this->context[$bit->getID()] = $bit;
+                $this->messages[] = [
+                    'role' => 'user',
+                    'text' => "CONTEXT INFORMATION: " . $bit->getKnowledge()
+                ];
+            }
+        }
     }
 }

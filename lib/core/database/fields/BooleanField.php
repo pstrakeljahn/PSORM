@@ -8,7 +8,7 @@ class BooleanField extends FieldBase
 
     public final function getMySQLDefinition()
     {
-        return " TINYINT(1)" . $this->getNotNullable() . " DEFAULT {$this->default}";
+        return "`{$this->name}` TINYINT(1)" . $this->getNotNullable() . " DEFAULT {$this->default}";
     }
 
     public final function setDefault(bool $default): self

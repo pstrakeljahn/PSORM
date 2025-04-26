@@ -1,6 +1,6 @@
 <?php
 
-namespace PS\Core\Ai;
+namespace PS\Package\Chatbot\Handler;
 
 use PS\Core\Helper\Env;
 
