@@ -70,6 +70,10 @@ class ChatServer
         $arrUser = BearerToken::decodeToken($arrData['token'], true);
         switch ($arrData['type']) {
             case 'LOGIN':
+                if ($arrUser === null) {
+                    $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "→ {$connection->getRemoteAddress()} - [ERROR]: No token provided.", true);
+                    return;
+                }
                 if ($arrUser['exp'] < time()) {
                     $connection->send([
                         "message" => '',
@@ -79,22 +83,33 @@ class ChatServer
                     ]);
                     $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "→ {$connection->getRemoteAddress()} - [SEND - UserID {$arrUser['UserID']}]: Token expired!", true);
                 } else {
-                    $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "→ {$connection->getRemoteAddress()} - [SEND - UserID {$arrUser['UserID']}]: ChatSession created", true);
-                    $initContext = "You are a friendly chatbot. Use a few emojies to lighten up the atmosphere. Introduce yourself briefly and greet the user by their first name in your first message. Only use information that you really know, e.g. through the context. Don't make up any additional information. If in doubt, be honest and say that you don't know. Use the german language by default, unless the user requests a different language.";
+                    $initContext = "You are a friendly chatbot. Use a few emojis to lighten the atmosphere, but not too many. Not every message has to have an emoji. Introduce yourself briefly and greet the user by their first name in your first message. Only use information that you really know, e.g. through the context. Don't make up any additional information. If in doubt, be honest and say that you don't know. Use the german language by default, unless the user requests a different language.";
                     $user = UserPeer::findById($arrUser['UserID']);
-                    $session = AiManager::getAiChatInstance(AiManager::PROVIDER_GEMINI, $initContext);
-                    $session->addUserContext($user);
-                    $callback = function ($chunk) use ($connection, $arrUser) {
+                    if (!isset($this->sessions[$arrUser['UserID']])) {
+                        $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "→ {$connection->getRemoteAddress()} - [SEND - UserID {$arrUser['UserID']}]: ChatSession created", true);
+                        $session = AiManager::getAiChatInstance(AiManager::PROVIDER_GEMINI, $initContext);
+                        $session->addUserContext($user);
+                        $callback = function ($chunk) use ($connection, $arrUser) {
+                            $connection->send([
+                                ...$chunk,
+                                "error" => null,
+                                "code" => 200
+                            ]);
+                            $output = str_replace("\n", "", $chunk["message"]);
+                            CliOutputHelper::output("← {$connection->getRemoteAddress()} - [AI RESPONSE - UserID {$arrUser['UserID']}]: '{$output}'");
+                        };
+                        $session->send($callback);
+                        $this->sessions[$arrUser['UserID']] = $session;
+                    } else {
+
+                        $conv = $this->sessions[$arrUser['UserID']]->getConversation();
                         $connection->send([
-                            ...$chunk,
+                            "message" => json_encode($conv),
+                            "inProgress" => false,
                             "error" => null,
-                            "code" => 200
+                            "code" => 418
                         ]);
-                        $output = str_replace("\n", "", $chunk["message"]);
-                        CliOutputHelper::output("← {$connection->getRemoteAddress()} - [AI RESPONSE - UserID {$arrUser['UserID']}]: '{$output}'");
-                    };
-                    $session->send($callback);
-                    $this->sessions[$arrUser['UserID']] = $session;
+                    }
                 }
                 return;
             case 'USER':

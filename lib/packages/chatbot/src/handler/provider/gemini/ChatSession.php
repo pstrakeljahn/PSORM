@@ -144,4 +144,9 @@ class ChatSession implements AiChatSessionInterface
         }
         return $parts;
     }
+
+    public function getConversation(): array
+    {
+        return $this->conversation;
+    }
 }
