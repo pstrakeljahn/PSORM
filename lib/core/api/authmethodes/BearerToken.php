@@ -75,13 +75,9 @@ class BearerToken implements AuthMethodeInterface
      *
      * @return bool
      */
-    public function getLoggedIn($additionalData = null): bool
+    public function getLoggedIn(): bool
     {
-        if ($additionalData === null) {
-            return isset($this->token['UserID']);
-        }
-        $token = self::validateToken($additionalData);
-        return isset($token['UserID']);
+        return isset($this->token['UserID']);
     }
 
     /**
@@ -239,7 +235,7 @@ class BearerToken implements AuthMethodeInterface
             if (!$token) {
                 throw new \Exception('Cannot get JWT token.');
             }
-            return self::validateToken($token);
+            return self::decodeToken($token);
         }
 
         return null;
@@ -309,7 +305,7 @@ class BearerToken implements AuthMethodeInterface
      * @param string $jwt
      * @return array|null
      */
-    public static function validateToken(string $jwt): ?array
+    public static function decodeToken(string $jwt, $skipValidation = false): ?array
     {
         [$header, $payload, $signatureProvided] = explode('.', $jwt);
 
@@ -324,7 +320,7 @@ class BearerToken implements AuthMethodeInterface
         $signature = hash_hmac('sha256', $base64UrlHeader . '.' . $base64UrlPayload, self::generateSecret(), true);
         $base64UrlSignature = self::base64url_encode($signature);
 
-        if ($base64UrlSignature === $signatureProvided && (!$tokenExpired || Env::get("TOKEN_EXPIRED_IN_S") === null)) {
+        if ($skipValidation || ($base64UrlSignature === $signatureProvided && (!$tokenExpired || Env::get("TOKEN_EXPIRED_IN_S") === null))) {
             return json_decode($decodedPayload, true);
         }
 

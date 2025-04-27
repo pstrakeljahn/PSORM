@@ -28,10 +28,15 @@ class KnowledgebitEntity extends Entity
             ->setRequired(true)
             ->setLength(255);
 
-        $knowledge = (new TextField('knowledge'))
+        $chapter = (new StringField('chapter'))
+            ->setNotNullable(true)
+            ->setRequired(true)
+            ->setLength(255);
+
+        $knowledgeJson = (new TextField('knowledgeJson'))
             ->setRequired(true);
 
-        $embedding = (new JsonField('embedding'))
+        $vector = (new JsonField('vector'))
             ->setNotNullable(false);
 
         $lastEmbedding = (new DateField("lastEmbedding"))
@@ -45,8 +50,9 @@ class KnowledgebitEntity extends Entity
 
         return [
             $refID,
-            $knowledge,
-            $embedding,
+            $chapter,
+            $knowledgeJson,
+            $vector,
             $lastEmbedding,
             $active
         ];

@@ -1,12 +1,9 @@
 <?php
 
-namespace PS\Package\Chatbot\Handler;
+namespace PS\Package\Chatbot\Handler\Provider\Gemini;
 
 use PS\Core\Helper\Env;
 
-/**
- * Handles communication with the Gemini AI API.
- */
 class GeminiHandler
 {
     private string $apiKey;
@@ -55,30 +52,6 @@ class GeminiHandler
 
         $response = $this->makeRequest($url, $postData);
         return self::parseResponse($response);
-    }
-
-    /**
-     * Streams the AI's response to a prompt using a callback for each chunk.
-     *
-     * @param string $prompt
-     * @param callable $onChunk
-     * @throws \Exception
-     */
-    public function streamGenerateContent(string $prompt, callable $onChunk): void
-    {
-        $url = $this->baseUrl . $this->model . ":streamGenerateContent?key=" . $this->apiKey;
-
-        $postData = [
-            "contents" => [
-                [
-                    "parts" => [
-                        ["text" => $prompt]
-                    ]
-                ]
-            ]
-        ];
-
-        $this->makeStreamingRequest($url, $postData, $onChunk);
     }
 
     /**
@@ -134,7 +107,6 @@ class GeminiHandler
             'Content-Type: application/json'
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($postData));
-
         curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $chunk) use ($onChunk) {
             $response = self::parseResponse($chunk);
             if ($response !== null) {

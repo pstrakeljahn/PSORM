@@ -1,6 +1,6 @@
 <?php
 
-namespace PS\Package\Chatbot\Handler;
+namespace PS\Package\Chatbot\Handler\Provider\Gemini;
 
 use PS\Core\Helper\Env;
 

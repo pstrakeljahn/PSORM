@@ -3,8 +3,9 @@
 namespace ObjectPeer;
 
 use KnowledgebitPeerBasic;
+use Object\Knowledgebit;
 use PS\Core\Database\Criteria;
-use PS\Package\Chatbot\Handler\GeminiEmbeddingHandler;
+use PS\Package\Chatbot\Handler\Provider\Gemini\GeminiEmbeddingHandler;
 use PS\Package\Chatbot\Helper\EmbeddingHelper;
 
 class KnowledgebitPeer extends KnowledgebitPeerBasic
@@ -32,7 +33,7 @@ class KnowledgebitPeer extends KnowledgebitPeerBasic
 
         foreach ($arrKnowledgebits as $bit) {
             /** @var Knowledgebit $bit */
-            $embedding = json_decode($bit->getEmbedding(), true);
+            $embedding = json_decode($bit->getVector(), true);
 
             if (!is_array($embedding)) {
                 continue;
