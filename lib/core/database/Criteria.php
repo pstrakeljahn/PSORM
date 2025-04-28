@@ -44,12 +44,12 @@ class Criteria
      * Adds a condition to the criteria.
      *
      * @param string $property Column name
-     * @param string $value    Value to compare
+     * @param mixed $value    Value to compare
      * @param string $operator SQL comparison operator
      *
      * @return $this
      */
-    public function add(string $property, string $value, string $operator = "="): self
+    public function add(string $property, $value, string $operator = "="): self
     {
         switch ($operator) {
             case self::IN:

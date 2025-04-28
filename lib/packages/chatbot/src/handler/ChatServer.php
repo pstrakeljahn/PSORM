@@ -2,7 +2,6 @@
 
 namespace PS\Package\Chatbot\Handler;
 
-use ObjectPeer\KnowledgebitPeer;
 use ObjectPeer\UserPeer;
 use PS\Core\Api\Authmethodes\BearerToken;
 use PS\Core\Helper\CliOutputHelper;
@@ -55,7 +54,7 @@ class ChatServer
      */
     private function handleMessage(TcpConnection $connection, $data): void
     {
-        /** @var array{ token: string, message: string, type: string } $arrData */
+        /** @var array{ token?: string, message?: string, type?: string }|null $arrData */
         $arrData = json_decode($data, true);
         if (!is_array($arrData) || !isset($arrData['type'], $arrData['token'])) {
             $connection->send(json_encode([
@@ -101,7 +100,6 @@ class ChatServer
                         $session->send($callback);
                         $this->sessions[$arrUser['UserID']] = $session;
                     } else {
-
                         $conv = $this->sessions[$arrUser['UserID']]->getConversation();
                         $connection->send([
                             "message" => json_encode($conv),
@@ -126,10 +124,6 @@ class ChatServer
                 $session = $this->sessions[$arrUser['UserID']];
                 $query = $arrData['message'] ?? '';
                 CliOutputHelper::output("→ {$connection->getRemoteAddress()} - [USER INPUT - UserID {$arrUser['UserID']}]: '{$query}'");
-                $arrKnowledgebit = KnowledgebitPeer::findMostRelevantBits($query, 3);
-                foreach ($arrKnowledgebit as $knowledgebit) {
-                    $session->addKnowledgeBit($knowledgebit);
-                }
                 $session->addUserMessage($query);
                 $callback = function ($chunk) use ($connection, $arrUser) {
                     $connection->send([

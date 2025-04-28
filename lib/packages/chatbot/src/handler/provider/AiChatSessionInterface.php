@@ -13,4 +13,6 @@ interface AiChatSessionInterface
     public function addKnowledgeBit(Knowledgebit $knowledgebit): self;
     public function setModel(string $model): self;
     public function send(callable $callback);
+    public function getConversation(): array;
+    public function getAiConversation(): array;
 }

@@ -153,7 +153,6 @@ abstract class Entity
     /**
      * Allows disabling of meta fields (_createdAt, _createdBy, etc.).
      *
-     * @param bool $val
      * @return $this
      */
     public final function setWithoutMeta(): self

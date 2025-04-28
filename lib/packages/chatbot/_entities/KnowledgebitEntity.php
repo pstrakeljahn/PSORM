@@ -44,7 +44,7 @@ class KnowledgebitEntity extends Entity
             ->setNotNullable(false);
 
         $active = (new BooleanField('active'))
-            ->setDefault(1)
+            ->setDefault(true)
             ->setNotNullable(true)
             ->setRequired(true);
 
