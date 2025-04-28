@@ -235,7 +235,7 @@ class BearerToken implements AuthMethodeInterface
             if (!$token) {
                 throw new \Exception('Cannot get JWT token.');
             }
-            return self::decodeToken($token);
+            return self::decodeToken($token, $request->requestType === Request::TYPE_REFRESH);
         }
 
         return null;

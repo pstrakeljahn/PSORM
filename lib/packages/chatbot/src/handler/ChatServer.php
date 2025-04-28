@@ -108,6 +108,7 @@ class ChatServer
                                 "error" => null,
                                 "code" => 418
                             ]);
+                            CliOutputHelper::output("← {$connection->getRemoteAddress()} - [CONVERSATION RESTORED - UserID {$arrUser['UserID']}]");
                         }
                     }
                     return;
@@ -121,6 +122,15 @@ class ChatServer
                         ]));
                         $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "→ {$connection->getRemoteAddress()} - [ERROR - UserID {$arrUser['UserID']}]: Session not found", true);
                         return;
+                    }
+                    if ($arrUser['exp'] < time()) {
+                        $connection->send([
+                            "message" => '',
+                            "inProgress" => false,
+                            "error" => "Token expired!",
+                            "code" => 401
+                        ]);
+                        $this->logInstance->add(Logging::LOG_TYPE_CHATBOT, "→ {$connection->getRemoteAddress()} - [SEND - UserID {$arrUser['UserID']}]: Refresh Token", true);
                     }
                     $session = $this->sessions[$arrUser['UserID']];
                     $query = $arrData['message'] ?? '';

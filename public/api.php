@@ -19,6 +19,7 @@ class ApiController
      */
     public function handle(): void
     {
+        $loggedIn = false;
         try {
             $request = Request::getInstance();
             $segmentType = $request->segments[$request->apiIndex + 2] ?? null;

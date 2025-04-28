@@ -65,7 +65,11 @@ class Request
     {
         $this->requestUri = $_SERVER['REQUEST_URI'] ?? '';
         $this->httpMethod = $_SERVER['REQUEST_METHOD'] ?? '';
-        $this->origin     = $_SERVER['HTTP_ORIGIN'] ?? null;
+        $origin = $_SERVER['HTTP_ORIGIN'] ?? null;
+        if ($origin !== null) {
+            $origin = preg_replace('#^https?://#', '', $origin);
+        }
+        $this->origin = $origin;
 
         if ($this->origin !== null && !in_array($this->origin, Config::ALLOWED_ORIGINS)) {
             throw new \Exception('Origin is not allowed');
