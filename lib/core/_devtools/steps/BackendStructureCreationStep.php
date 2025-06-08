@@ -38,7 +38,7 @@ final class BackendStructureCreationStep extends BuildStep
         $structure = [
             'ci'                                 => null,
             'build'                              => ['customEndpoints', 'peerBasic', 'basic'],
-            basename(Config::LOG_FOLDER)         => ['mails'],
+            basename(Config::LOG_FOLDER)         => ['mails', 'websocket'],
             basename(Config::FILES_FOLDER)       => null,
             basename(Config::TEMP_FOLDER)        => null,
         ];

@@ -17,13 +17,14 @@ class IngestKnowledgeHelper
 
     public static function run()
     {
-        self::ingestFromDirectory();
+        $dir = Config::FILES_FOLDER . "knowledge";
+        self::ingestFromDirectory($dir);
+        file_put_contents($dir . '/index.json', json_encode(self::createChapterIndex($dir), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         self::vectorizeKnwledgeBits();
     }
 
-    private static function ingestFromDirectory(): void
+    private static function ingestFromDirectory($dir): void
     {
-        $dir = Config::FILES_FOLDER . "knowledge";
         self::checkKnowledgeDirectoryExists($dir);
 
         $iterator = new RecursiveIteratorIterator(
@@ -63,6 +64,25 @@ class IngestKnowledgeHelper
                 }
             }
         }
+    }
+
+    private static function createChapterIndex(string $dir): array
+    {
+        $index = [];
+
+        $items = scandir($dir);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $path = $dir . DIRECTORY_SEPARATOR . $item;
+            if (is_dir($path)) {
+                $index[$item] = self::createChapterIndex($path);
+            }
+        }
+
+        return $index;
     }
 
 

@@ -2,6 +2,7 @@
 
 namespace PS\Core\Helper;
 
+use Config;
 use Workerman\Connection\TcpConnection;
 use Workerman\Worker;
 
@@ -12,6 +13,9 @@ class WebSocketServer
     public function __construct(string $host = '0.0.0.0', int $port = 2346)
     {
         $this->worker = new Worker("websocket://{$host}:{$port}");
+        $this->worker::$logFile  = Config::LOG_FOLDER . 'websocket/websocket.log';
+        $this->worker::$pidFile   = Config::LOG_FOLDER . 'websocket/websocket.pid';
+        $this->worker::$statusFile   = Config::LOG_FOLDER . 'websocket/websocket.status';
         $this->worker->count = 1;
 
         $this->worker->onConnect = function (TcpConnection $connection) {
@@ -19,8 +23,7 @@ class WebSocketServer
         };
 
         $this->worker->onMessage = function (TcpConnection $connection, $data) {
-            echo "Nachricht erhalten: $data\n";
-            $connection->send("Server empfängt: $data");
+            $connection->send($data);
         };
 
         $this->worker->onClose = function (TcpConnection $connection) {

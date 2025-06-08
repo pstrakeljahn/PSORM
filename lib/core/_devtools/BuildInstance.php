@@ -42,7 +42,9 @@ final class BuildInstance
      */
     public static function run(): void
     {
-        define('SERVICE', 1);
+        if (!defined('SERVICE')) {
+            define('SERVICE', 1);
+        }
         self::printPreamble();
         BuildStep::workThroughSteps(self::steps());
     }

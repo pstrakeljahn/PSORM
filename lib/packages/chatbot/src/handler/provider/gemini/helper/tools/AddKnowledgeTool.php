@@ -2,7 +2,9 @@
 
 namespace PS\Package\Chatbot\Handler\Provider\Gemini\Helper\Tools;
 
+use Config;
 use ObjectPeer\KnowledgebitPeer;
+use PS\Package\Chatbot\Handler\Provider\Gemini\GeminiHandler;
 
 class AddKnowledgeTool implements AiToolInterface
 {
@@ -42,12 +44,58 @@ class AddKnowledgeTool implements AiToolInterface
 
     public static function preExecute($data, &$chatInstance)
     {
+        $tableOfContent = "";
+        $indexFilePath = Config::FILES_FOLDER . "knowledge/index.json";
+        if (file_exists($indexFilePath)) {
+            $tableOfContent = file_get_contents($indexFilePath);
+        }
+
+        $schema = json_encode([
+            '$schema' => 'https://json-schema.org/draft/2020-12/schema',
+            'title' => 'Directory Search',
+            'description' => 'A tool for selecting relevant chapters from the knowledge base.',
+            'properties' => [
+                'data' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'dirs' => [
+                            'type' => 'array',
+                            'description' => 'An array of chapters that match the user query. For example ["dir1", "dir2/subdir1"]',
+                        ],
+                    ],
+                    'required' => ['dirs'],
+                    'additionalProperties' => false,
+                ],
+            ],
+            'required' => ['data'],
+            'additionalProperties' => false,
+        ]);
         $arr = $chatInstance->getAiConversation();
-        $knowledgePromt = [...array_slice($arr, -3), [
+        $arrContext = [...array_slice($arr, -2), [
             "role" => "user",
             "text" => $data['prompt']
         ]];
-        $arrKnowledgebit = KnowledgebitPeer::findMostRelevantBits(json_encode($knowledgePromt), $data['requestedBits']);
+        $vecText = "";
+        foreach ($arrContext as $context) {
+            $vecText .= $context["text"];
+        }
+        $context = json_encode($arrContext);
+        $prompt = "
+            The user asked the following question: '{$data['prompt']}'.
+            Here is the recent chat context: $context.
+            The following chapters are available in the knowledge base: $tableOfContent.
+
+            Please select the {$data['requestedBits']} chapters that best match the user's query.
+
+            Your answer MUST follow this JSON Schema:
+            $schema";
+
+        $response = (new GeminiHandler())->generateContent($prompt)['message'] ?? '';
+        $response = trim(str_replace(["```json", "```"], '', $response));
+
+        $resData = json_decode($response, true)["data"]["dirs"];
+
+        $arrKnowledgebit = KnowledgebitPeer::findMostRelevantBits(json_encode($vecText), $data['requestedBits'] < 3 ? 3 : $data['requestedBits'], $resData);
         foreach ($arrKnowledgebit as $knowledgebit) {
             $chatInstance->addKnowledgeBit($knowledgebit);
         }

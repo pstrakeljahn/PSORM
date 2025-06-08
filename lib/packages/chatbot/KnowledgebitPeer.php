@@ -15,7 +15,7 @@ class KnowledgebitPeer extends KnowledgebitPeerBasic
      * @param int $limit
      * @return Knowledgebit[]
      */
-    public static function findMostRelevantBits(string $query, int $limit = 5): array
+    public static function findMostRelevantBits(string $query, int $limit = 5, array $chapters = []): array
     {
         $embeddingHandler = new GeminiEmbeddingHandler();
         $queryVector = $embeddingHandler->embedText($query);
@@ -24,9 +24,13 @@ class KnowledgebitPeer extends KnowledgebitPeerBasic
             return [];
         }
 
+        $c = Criteria::getInstance();
+        foreach ($chapters as $section) {
+            $c->add(self::CHAPTER, $section, Criteria::LIKE_PERCENT);
+        }
+
         $arrKnowledgebits = self::find(
-            Criteria::getInstance()
-                ->add(self::ACTIVE, true)
+            $c->add(self::ACTIVE, true)
         );
 
         $scoredBits = [];
