@@ -13,7 +13,7 @@ class BooleanField extends FieldBase
 
     public final function setDefault(bool $default): self
     {
-        $this->default = $default;
+        $this->default = $default ? 1 : 0;
         return $this;
     }
 }

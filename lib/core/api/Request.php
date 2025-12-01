@@ -173,4 +173,9 @@ class Request
         parse_str($raw, $parsed);
         return $parsed;
     }
+
+    public static function getHeader(): array
+    {
+        return getallheaders();
+    }
 }

@@ -4,6 +4,7 @@ namespace Entity;
 
 use PS\Core\Database\Fields\StringField;
 use PS\Core\Database\Entity;
+use PS\Core\Database\Fields\BooleanField;
 
 class UserEntity extends Entity
 {
@@ -37,6 +38,9 @@ class UserEntity extends Entity
         $lastname = (new StringField('lastname'))
             ->setNotNullable(false)
             ->setLength(255);
+        $headerAuth = (new BooleanField('allowHeaderAuth'))
+            ->setNotNullable(true)
+            ->setDefault(false);
 
         return [
             $username,
@@ -44,6 +48,7 @@ class UserEntity extends Entity
             $mail,
             $firstName,
             $lastname,
+            $headerAuth
         ];
     }
 }
