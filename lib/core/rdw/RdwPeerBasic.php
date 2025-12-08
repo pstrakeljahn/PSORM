@@ -55,10 +55,10 @@ class RdwPeerBasic
      * @param int|string $id The ID to look for.
      * @param bool $asArray If true, returns result as an array instead of an object.
      *
-     * @return mixed|null Single result (array or object), or null if not found.
+     * @return RdwBasic|null Single result (array or object), or null if not found.
      * @throws \Exception On database or instantiation errors.
      */
-    public static function findById(int|string $id, bool $asArray = false): mixed
+    public static function findById(int|string $id, bool $asArray = false): ?RdwBasic
     {
         $calledClass = get_called_class();
         $sql = sprintf("SELECT * FROM `%s` WHERE ID = :id", $calledClass::TABLE_NAME);

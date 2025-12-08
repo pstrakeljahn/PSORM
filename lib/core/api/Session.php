@@ -3,6 +3,8 @@
 namespace PS\Core\Api;
 
 use PS\Core\Api\Authmethodes\AuthMethodeInterface;
+use PS\Core\Api\Authmethodes\HeaderAuthentification;
+use PS\Core\Helper\Env;
 use ReflectionClass;
 
 /**
@@ -34,16 +36,20 @@ class Session
             $login = true;
         }
 
-        foreach (include 'authmethodes/Methodes.php' as $className) {
-            $reflection = new ReflectionClass($className);
-            if ($reflection->implementsInterface(AuthMethodeInterface::class)) {
-                $this->authInstance = new $className($login);
-                break;
+        if (Env::get("USE_HEADER_AUTH")) {
+            $this->authInstance = new HeaderAuthentification();
+        } else {
+            foreach (include 'authmethodes/Methodes.php' as $className) {
+                $reflection = new ReflectionClass($className);
+                if ($reflection->implementsInterface(AuthMethodeInterface::class)) {
+                    $this->authInstance = new $className($login);
+                    break;
+                }
             }
-        }
 
-        if (!$this->authInstance) {
-            throw new \Exception("No valid authentication method found.");
+            if (!$this->authInstance) {
+                throw new \Exception("No valid authentication method found.");
+            }
         }
     }
 

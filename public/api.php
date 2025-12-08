@@ -5,6 +5,7 @@ use PS\Core\Api\Request;
 use PS\Core\Api\Response;
 use PS\Core\Api\Session;
 use PS\Core\Helper\ApiHelper;
+use PS\Core\Helper\Env;
 use PS\Core\Logging\Logging;
 
 require_once '../lib/core/init.php';

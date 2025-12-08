@@ -59,7 +59,8 @@ class OptionRequestBuilder
 
             $data = self::BODY_TEMPLATE;
 
-            $data[self::DATATYPE][self::DATATYPE_TYPE]       = self::getPrivateProperty($field, 'datatype');
+            $data[self::DATATYPE][self::DATATYPE_TYPE]       = self::getFieldType($field);
+            // $data[self::DATATYPE][self::DATATYPE_TYPE]       = self::getPrivateProperty($field, 'datatype');
             $data[self::DATATYPE][self::DATATYPE_LENGTH]     = self::getPrivateProperty($field, 'length');
             $data[self::DATATYPE][self::DATATYPE_NULLABLE]   = !self::getPrivateProperty($field, 'notNullable');
             $data[self::DATATYPE][self::DATATYPE_FKSETTINGS] = self::getPrivateProperty($field, 'fkSettings');
@@ -75,6 +76,31 @@ class OptionRequestBuilder
         }
 
         return $result;
+    }
+
+    private static function getFieldType($field)
+    {
+        $explodedClass = explode("\\", get_class($field));
+        $className = end($explodedClass);
+        switch ($className) {
+            case 'BooleanField':
+                return 'bool';
+            case 'DateField':
+                return 'date';
+            case 'EnumField':
+                return 'enum';
+            case 'IntegerField':
+                return 'int';
+            case 'JsonField':
+                return 'json';
+            case 'StringField':
+                return 'string';
+            case 'TextField':
+                return 'text';
+
+            default:
+                throw new \Exception("Unknow datatype");
+        }
     }
 
     /**
