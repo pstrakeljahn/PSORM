@@ -20,7 +20,7 @@ class ApiHelper
      * @return array|null       Returns object data as array or list of arrays, or null if not found.
      * @throws \Exception       If entity is unavailable or data is invalid.
      */
-    public static function findObject(string $objName, $id = null, int $page = null, int $pageSize = null): ?array
+    public static function findObject(string $objName, $id = null, ?int $page = null, ?int $pageSize = null): ?array
     {
         self::checkEntityAvailability($objName);
 
